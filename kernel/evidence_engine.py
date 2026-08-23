@@ -23,10 +23,10 @@ class EvidenceEngine:
         session
     ):
 
-        if event.event_type != (
+        if event.event_type not in (
+            "EVIDENCE",
             "INVESTIGATION_RESULT"
         ):
-
             return None
 
 
@@ -37,10 +37,73 @@ class EvidenceEngine:
         )
 
 
-        result = payload.get(
-            "result",
-            ""
-        )
+        if event.event_type == "EVIDENCE":
+
+
+
+            content = payload.get(
+
+
+
+                "content",
+
+
+
+                ""
+
+
+
+            )
+
+
+
+        else:
+
+
+
+            result = payload.get(
+
+
+
+                "result",
+
+
+
+                ""
+
+
+
+            )
+
+
+
+            if isinstance(result, dict):
+
+
+
+                content = result.get(
+
+
+
+                    "result",
+
+
+
+                    str(result)
+
+
+
+                )
+
+
+
+            else:
+
+
+
+                content = result
+
+
 
 
         supports = payload.get(
@@ -65,9 +128,7 @@ class EvidenceEngine:
 
             source=event.source,
 
-            content=str(
-                result
-            ),
+            content=str(content),
 
             supports=list(
                 supports
@@ -99,11 +160,17 @@ class EvidenceEngine:
 
         for hypothesis_name in supports:
 
-            hypothesis = (
-                self.hypothesis_manager.find(
-                    session.reasoning_state,
-                    hypothesis_name
-                )
+            hypothesis = next(
+                (
+                    h
+                    for h in getattr(
+                        session.reasoning_state,
+                        "hypotheses",
+                        []
+                    )
+                    if h.name == hypothesis_name
+                ),
+                None
             )
 
 
@@ -120,11 +187,17 @@ class EvidenceEngine:
 
         for hypothesis_name in contradicts:
 
-            hypothesis = (
-                self.hypothesis_manager.find(
-                    session.reasoning_state,
-                    hypothesis_name
-                )
+            hypothesis = next(
+                (
+                    h
+                    for h in getattr(
+                        session.reasoning_state,
+                        "hypotheses",
+                        []
+                    )
+                    if h.name == hypothesis_name
+                ),
+                None
             )
 
 

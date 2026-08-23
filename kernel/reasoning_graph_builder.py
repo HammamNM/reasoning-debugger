@@ -15,7 +15,6 @@ from kernel.provenance import (
 
 class ReasoningGraphBuilder:
 
-
     def __init__(
         self
     ):
@@ -27,6 +26,8 @@ class ReasoningGraphBuilder:
         self.last_hypothesis_node = None
 
         self.last_investigation_node = None
+
+        self.last_evidence_node = None
 
         self.hypothesis_nodes = {}
 
@@ -85,17 +86,61 @@ class ReasoningGraphBuilder:
         )
 
 
+        if primitive in (
+            PrimitiveType.EVIDENCE,
+            PrimitiveType.INVESTIGATION
+        ):
+
+            if primitive == PrimitiveType.EVIDENCE:
+
+                self.last_evidence_node = node.id
+
+            supports = event.payload.get(
+                "supports",
+                []
+            )
+
+            contradicts = event.payload.get(
+                "contradicts",
+                []
+            )
+
+            for hypothesis_name in supports:
+
+                hypothesis_node = self.find_hypothesis_node(
+                    hypothesis_name
+                )
+
+                if hypothesis_node is not None:
+
+                    self.connect_support(
+                        node.id,
+                        hypothesis_node.id
+                    )
+
+            for hypothesis_name in contradicts:
+
+                hypothesis_node = self.find_hypothesis_node(
+                    hypothesis_name
+                )
+
+                if hypothesis_node is not None:
+
+                    self.connect_contradiction(
+                        node.id,
+                        hypothesis_node.id
+                    )
+
+
         if primitive == PrimitiveType.HYPOTHESIS:
 
             self.last_hypothesis_node = node.id
-
 
             hypothesis_name = (
                 event.payload.get(
                     "action"
                 )
             )
-
 
             if hypothesis_name:
 
@@ -112,6 +157,13 @@ class ReasoningGraphBuilder:
         self.connect_previous(
             node.id
         )
+
+
+        if primitive == PrimitiveType.INFERENCE:
+
+            self.connect_inference_from_evidence(
+                node.id
+            )
 
 
         if primitive == PrimitiveType.HYPOTHESIS_UPDATE:
@@ -200,6 +252,28 @@ class ReasoningGraphBuilder:
         event_type = event.event_type
 
 
+        # Generic reasoning primitives
+
+        if event_type == "HISTORY_RESPONSE_REQUEST":
+            return PrimitiveType.OBSERVATION
+
+        if event_type == "OBSERVATION":
+
+            return PrimitiveType.OBSERVATION
+
+
+        if event_type == "EVIDENCE":
+
+            return PrimitiveType.EVIDENCE
+
+
+        if event_type == "INFERENCE":
+
+            return PrimitiveType.INFERENCE
+
+
+        # Existing kernel primitives
+
         if event_type == "OUTCOME_UPDATED":
 
             return PrimitiveType.OUTCOME
@@ -285,6 +359,27 @@ class ReasoningGraphBuilder:
             current_id,
 
             EdgeRelation.SEQUENCE
+
+        )
+
+
+    def connect_inference_from_evidence(
+        self,
+        inference_node_id
+    ):
+
+        if self.last_evidence_node is None:
+
+            return
+
+
+        self.graph.add_edge(
+
+            self.last_evidence_node,
+
+            inference_node_id,
+
+            EdgeRelation.DERIVED_FROM
 
         )
 

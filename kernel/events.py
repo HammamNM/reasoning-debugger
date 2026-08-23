@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Any, Dict
 import uuid
 
@@ -20,11 +20,51 @@ class ReasoningEvent:
     source: str = ""
 
     timestamp: str = field(
-        default_factory=lambda: datetime.utcnow().isoformat()
+        default_factory=lambda: datetime.now(UTC).isoformat()
     )
 
     metadata: Dict[str, Any] = field(
         default_factory=dict
+    )
+
+
+def create_event(
+    event_type,
+    payload=None,
+    source="SIMULATION"
+):
+
+    if payload is None:
+
+        payload = {}
+
+
+    if not isinstance(
+        payload,
+        dict
+    ):
+
+        if event_type == "STUDENT_ACTION":
+
+            payload = {
+                "action": payload
+            }
+
+        else:
+
+            payload = {
+                "content": payload
+            }
+
+
+    return ReasoningEvent(
+
+        event_type=event_type,
+
+        payload=payload,
+
+        source=source
+
     )
 
 

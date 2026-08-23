@@ -1,0 +1,66 @@
+
+from kernel.generic_bootstrap import (
+    GenericKernelBootstrap
+)
+
+from kernel.events import (
+    create_event
+)
+
+
+def test_generic_reasoning_trace():
+
+    runtime = (
+        GenericKernelBootstrap()
+        .create_runtime()
+    )
+
+    runtime.publish(
+        create_event(
+            "OBSERVATION",
+            {
+                "content": "Customer made three failed payments"
+            },
+            source="AGENT"
+        )
+    )
+
+    runtime.publish(
+        create_event(
+            "EVIDENCE",
+            {
+                "content": "Billing address changed recently"
+            },
+            source="AGENT"
+        )
+    )
+
+    runtime.publish(
+        create_event(
+            "HYPOTHESIS",
+            {
+                "content": "Customer may be committing fraud"
+            },
+            source="AGENT"
+        )
+    )
+
+    runtime.publish(
+        create_event(
+            "DECISION",
+            {
+                "content": "Reject customer"
+            },
+            source="AGENT"
+        )
+    )
+
+    runtime.run_cycle()
+
+    graph = (
+        runtime.graph_builder.graph
+    )
+
+    assert len(graph.nodes) == 4
+
+    assert len(graph.edges) == 3

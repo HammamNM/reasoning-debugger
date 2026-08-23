@@ -5,7 +5,6 @@ from kernel.events import (
 
 class InvestigationEngine:
 
-
     def process_event(
         self,
         event,
@@ -13,19 +12,14 @@ class InvestigationEngine:
     ):
 
         if event.event_type != "ACTION":
-
             return None
-
 
         action = event.payload.get(
             "action"
         )
 
-
         if not action:
-
             return None
-
 
         scenario = getattr(
             session,
@@ -33,16 +27,14 @@ class InvestigationEngine:
             None
         )
 
-
         if scenario is None:
-
             return None
 
-
-        investigations = (
-            scenario.investigations
+        investigations = getattr(
+            scenario,
+            "investigations",
+            {}
         )
-
 
         investigation_id = (
             self.get_investigation_id(
@@ -51,41 +43,30 @@ class InvestigationEngine:
             )
         )
 
-
         if investigation_id is None:
-
             return None
-
 
         investigation = investigations.get(
             investigation_id
         )
 
-
         if investigation is None:
-
             return None
 
-
         return ReasoningEvent(
-
             event_type="INVESTIGATION_RESULT",
 
             payload={
-
-                "action":
-                    action,
+                "action": action,
 
                 "investigation_id":
                     investigation_id,
 
                 "result":
                     investigation
-
             },
 
             source="INVESTIGATION_ENGINE"
-
         )
 
 
@@ -95,8 +76,14 @@ class InvestigationEngine:
         scenario
     ):
 
+        metadata = getattr(
+            scenario,
+            "metadata",
+            {}
+        )
+
         action_config = (
-            scenario.metadata
+            metadata
             .get(
                 "actions",
                 {}
@@ -106,12 +93,30 @@ class InvestigationEngine:
             )
         )
 
+        if action_config is not None:
 
-        if action_config is None:
+            investigation_id = (
+                action_config.get(
+                    "investigation_id"
+                )
+            )
 
-            return None
+            if investigation_id:
+                return investigation_id
 
+        # -------------------------------------------------
+        # Fallback:
+        # If the action itself is the investigation key.
+        # Example: ORDER_ECG -> investigations["ORDER_ECG"]
+        # -------------------------------------------------
 
-        return action_config.get(
-            "investigation_id"
+        investigations = getattr(
+            scenario,
+            "investigations",
+            {}
         )
+
+        if action in investigations:
+            return action
+
+        return None

@@ -192,6 +192,54 @@ class QueryEngine:
         ]
 
 
+
+    def reasoning_path(self):
+        sequence_edges = self.edges_by_relation(
+            EdgeRelation.SEQUENCE
+        )
+
+        if not sequence_edges:
+            return [node.id for node in self.graph.nodes]
+
+        sources = {edge.source for edge in sequence_edges}
+        targets = {edge.target for edge in sequence_edges}
+
+        roots = [
+            node.id
+            for node in self.graph.nodes
+            if node.id in sources and node.id not in targets
+        ]
+
+        if not roots:
+            roots = [sequence_edges[0].source]
+
+        path = []
+        visited = set()
+        current = roots[0]
+
+        while current is not None:
+            if current in visited:
+                raise ValueError(
+                    "Cycle detected in SEQUENCE reasoning path"
+                )
+
+            visited.add(current)
+            path.append(current)
+
+            next_edges = [
+                edge
+                for edge in sequence_edges
+                if edge.source == current
+            ]
+
+            if not next_edges:
+                break
+
+            current = next_edges[0].target
+
+        return path
+
+
     def hypotheses_supported_by(
         self,
         minimum_support=1

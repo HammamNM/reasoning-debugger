@@ -1,23 +1,18 @@
-from kernel.hypothesis_manager import (
-    HypothesisManager
-)
+from kernel.hypothesis_manager import HypothesisManager
 
 
 class ReasoningStateUpdater:
 
-
     def __init__(self):
+        self.hypothesis_manager = HypothesisManager()
 
-        self.hypothesis_manager = (
-            HypothesisManager()
+    def update(self, reasoning_state, event):
+
+        event_type = getattr(
+            event,
+            "event_type",
+            ""
         )
-
-
-    def update(
-        self,
-        reasoning_state,
-        event
-    ):
 
         payload = getattr(
             event,
@@ -25,124 +20,140 @@ class ReasoningStateUpdater:
             {}
         )
 
+        if not isinstance(payload, dict):
+            return
 
-        action = payload.get(
-            "action"
-        )
+        if event_type not in (
+            "ACTION",
+            "STUDENT_ACTION",
+        ):
+            return
 
+        action = payload.get("action")
 
-        if action is None:
+        if not isinstance(action, str):
+            return
+
+        # -------------------------------------------------
+        # Information gathering
+        # -------------------------------------------------
+
+        if action.startswith("ASK_"):
+
+            if action not in reasoning_state.collected_information:
+                reasoning_state.collected_information.append(action)
+
+            reasoning_state.transitions.record(
+                from_state="INITIAL",
+                to_state="INFORMATION_GATHERING",
+                trigger=action,
+            )
 
             return
 
+        # -------------------------------------------------
+        # Investigation ordering
+        # -------------------------------------------------
 
-        if action.startswith(
-            "ASK_"
-        ):
+        if action.startswith("ORDER_"):
 
-            reasoning_state.collected_information.append(
-                action
+            if action not in reasoning_state.ordered_investigations:
+                reasoning_state.ordered_investigations.append(action)
+
+            return
+
+        # -------------------------------------------------
+        # Hypothesis formation
+        # -------------------------------------------------
+
+        if action.startswith("DIAGNOSIS_"):
+
+            reasoning_state.transitions.record(
+                from_state="INFORMATION_GATHERING",
+                to_state="HYPOTHESIS_FORMATION",
+                trigger=action,
             )
-
-
-        elif action.startswith(
-            "ORDER_"
-        ):
-
-            reasoning_state.ordered_investigations.append(
-                action
-            )
-
-
-        elif action.startswith(
-            "DIAGNOSIS_"
-        ):
 
             hypothesis = self.hypothesis_manager.find(
-
                 reasoning_state,
-
-                action
-
+                action,
             )
 
-
             if hypothesis is None:
-
                 self.hypothesis_manager.create(
-
                     reasoning_state,
-
                     action,
-
-                    trigger=action
-
+                    trigger=action,
                 )
 
+            return
 
-        elif action.startswith(
-            "CONFIRM_"
-        ):
+        # -------------------------------------------------
+        # Hypothesis confirmation
+        # -------------------------------------------------
+
+        if action.startswith("CONFIRM_"):
 
             hypothesis_name = action.replace(
                 "CONFIRM_",
-                "DIAGNOSIS_"
+                "DIAGNOSIS_",
+                1,
             )
-
 
             hypothesis = self.hypothesis_manager.find(
-
                 reasoning_state,
-
-                hypothesis_name
-
+                hypothesis_name,
             )
 
+            if hypothesis is None:
+                return
 
-            if hypothesis is not None:
+            confirmed = self.hypothesis_manager.confirm(
+                hypothesis
+            )
 
-                self.hypothesis_manager.confirm(
-                    hypothesis
-                )
+            if confirmed:
+                if hypothesis not in reasoning_state.confirmed_hypotheses:
+                    reasoning_state.confirmed_hypotheses.append(
+                        hypothesis
+                    )
 
-                reasoning_state.confirmed_hypotheses.append(
-                    hypothesis
-                )
+            return
 
+        # -------------------------------------------------
+        # Hypothesis rejection
+        # -------------------------------------------------
 
-        elif action.startswith(
-            "REJECT_"
-        ):
+        if action.startswith("REJECT_"):
 
             hypothesis_name = action.replace(
                 "REJECT_",
-                "DIAGNOSIS_"
+                "DIAGNOSIS_",
+                1,
             )
-
 
             hypothesis = self.hypothesis_manager.find(
-
                 reasoning_state,
-
-                hypothesis_name
+                hypothesis_name,
             )
 
+            if hypothesis is None:
+                return
 
-            if hypothesis is not None:
-
-                self.hypothesis_manager.reject(
-
-                    reasoning_state,
-
-                    hypothesis
-
-                )
-
-
-        elif action.startswith(
-            "TREAT_"
-        ):
-
-            reasoning_state.performed_treatments.append(
-                action
+            self.hypothesis_manager.reject(
+                reasoning_state,
+                hypothesis,
             )
+
+            return
+
+        # -------------------------------------------------
+        # Treatment / decision action
+        # -------------------------------------------------
+
+        if action.startswith("TREAT_"):
+
+            if action not in reasoning_state.performed_treatments:
+                reasoning_state.performed_treatments.append(action)
+
+            return

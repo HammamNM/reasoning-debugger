@@ -6,7 +6,7 @@ from kernel.bootstrap import (
     KernelBootstrap
 )
 
-from simulation.session import (
+from backend.session import (
     ClinicalSession
 )
 
@@ -68,10 +68,32 @@ def test_investigation_flow():
     )
 
 
-    assert len(events) >= 2
+    assert len(events) >= 3
+
+    action_events = [
+        event for event in events
+        if event.event_type == "ACTION"
+    ]
+
+    investigation_events = [
+        event for event in events
+        if event.event_type == "INVESTIGATION_RESULT"
+    ]
+
+    assert len(action_events) >= 1
+    assert len(investigation_events) >= 1
 
 
-    assert events[0].event_type == "ACTION"
 
 
-    assert events[1].event_type == "INVESTIGATION_RESULT"
+
+    assert action_events[0].payload["action"] == "ORDER_ECG"
+
+    investigation = investigation_events[0]
+
+    assert investigation.payload["investigation_id"] == "ORDER_ECG"
+
+    assert (
+        investigation.payload["result"]["result"]
+        == "ST depression in lateral leads"
+    )

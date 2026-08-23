@@ -1,48 +1,61 @@
-from analytics.event_bridge import EventBridge
-from simulation.state import SimulationState
-from simulation.rules import SimulationRule, RuleEngine
+from backend.session import ClinicalSession
+from kernel.bootstrap import KernelBootstrap
+from kernel.scenario import Scenario
+from simulation.orchestrator import SimulationOrchestrator
 
 
-state = SimulationState()
+def test_simulation_to_kernel_runtime():
 
-engine = RuleEngine()
-
-
-engine.add_rule(
-    SimulationRule(
-        trigger_action="ORDER_ECG",
-        effect="REVEAL_ECG"
+    scenario = Scenario(
+        scenario_id="SIM_001",
+        title="Simulation Test",
+        metadata={
+            "initial_stage": "INITIAL",
+            "actions": {
+                "ORDER_ECG": {
+                    "event_type": "INVESTIGATION_ORDERED",
+                    "investigation_id": "ECG_001",
+                    "next_stage": "INVESTIGATION"
+                }
+            }
+        },
+        investigations={
+            "ECG_001": {
+                "result": "Normal ECG"
+            }
+        }
     )
-)
+
+    session = ClinicalSession(
+        student_id="student_001",
+        scenario_id="SIM_001"
+    )
+
+    runtime = KernelBootstrap().create_runtime(
+        session,
+        scenario=scenario
+    )
+
+    orchestrator = SimulationOrchestrator(
+        runtime
+    )
+
+    orchestrator.process_student_action(
+        "ORDER_ECG"
+    )
+
+    events = (
+        session.event_stream
+        .get_all()
+    )
+
+    assert len(events) > 0
+
+    assert any(
+        event.event_type == "ACTION"
+        for event in events
+    )
 
 
-print("Before:")
-print(state.ecg_visible)
-
-
-engine.process_action(
-    "ORDER_ECG",
-    state
-)
-
-
-print("After:")
-print(state.ecg_visible)
-
-
-print("Actions:")
-print(state.completed_actions)
-print("\nEvents:")
-
-for event in engine.events:
-    print(event)
-print("TOTAL EVENTS:", len(engine.events))
-bridge = EventBridge()
-
-bridge.collect(engine.events)
-
-
-print("BRIDGED EVENTS:")
-
-for event in bridge.get_events():
-    print(event.event_type, "-", event.content)
+if __name__ == "__main__":
+    test_simulation_to_kernel_runtime()

@@ -1,14 +1,16 @@
 from kernel.bootstrap import KernelBootstrap
 
-from simulation.session import ClinicalSession
+from kernel.events import (
+    create_event
+)
+
+from backend.session import ClinicalSession
 
 
 def test_full_kernel_flow():
 
     session = ClinicalSession(
-
         scenario_id="TEST_001"
-
     )
 
 
@@ -19,9 +21,15 @@ def test_full_kernel_flow():
 
     runtime.publish(
 
-        runtime.create_event(
+        create_event(
 
-            "ASK_CHEST_PAIN"
+            "ACTION",
+
+            {
+                "action": "ASK_CHEST_PAIN"
+            },
+
+            source="TEST"
 
         )
 
@@ -33,9 +41,15 @@ def test_full_kernel_flow():
 
     runtime.publish(
 
-        runtime.create_event(
+        create_event(
 
-            "DIAGNOSIS_NSTEMI"
+            "ACTION",
+
+            {
+                "action": "DIAGNOSIS_NSTEMI"
+            },
+
+            source="TEST"
 
         )
 
@@ -43,7 +57,6 @@ def test_full_kernel_flow():
 
 
     runtime.run_cycle()
-
 
 
     graph = runtime.graph_builder.graph
@@ -57,7 +70,6 @@ def test_full_kernel_flow():
     assert len(
         graph.edges
     ) == 1
-
 
 
     transitions = (

@@ -1,6 +1,6 @@
 from kernel.bootstrap import KernelBootstrap
 
-from simulation.session import ClinicalSession
+from backend.session import ClinicalSession
 
 from simulation.engine import SimulationEngine
 

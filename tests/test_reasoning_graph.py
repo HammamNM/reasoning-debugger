@@ -583,3 +583,64 @@ if __name__ == "__main__":
     print(
         "REASONING GRAPH TESTS PASSED"
     )
+
+def test_evidence_supports_hypothesis_from_payload():
+    builder = ReasoningGraphBuilder()
+
+    hypothesis = builder.process_event(
+        ReasoningEvent(
+            event_type="ACTION",
+            payload={"action": "DIAGNOSIS_NSTEMI"},
+            source="STUDENT"
+        )
+    )
+
+    evidence = builder.process_event(
+        ReasoningEvent(
+            event_type="EVIDENCE",
+            payload={
+                "content": "Troponin elevated",
+                "supports": ["DIAGNOSIS_NSTEMI"]
+            },
+            source="INVESTIGATION_ENGINE"
+        )
+    )
+
+    support_edges = builder.graph.edges_by_relation(
+        EdgeRelation.SUPPORTS
+    )
+
+    assert len(support_edges) == 1
+    assert support_edges[0].source == evidence.id
+    assert support_edges[0].target == hypothesis.id
+
+
+def test_evidence_contradicts_hypothesis_from_payload():
+    builder = ReasoningGraphBuilder()
+
+    hypothesis = builder.process_event(
+        ReasoningEvent(
+            event_type="ACTION",
+            payload={"action": "DIAGNOSIS_NSTEMI"},
+            source="STUDENT"
+        )
+    )
+
+    evidence = builder.process_event(
+        ReasoningEvent(
+            event_type="EVIDENCE",
+            payload={
+                "content": "Normal serial troponins",
+                "contradicts": ["DIAGNOSIS_NSTEMI"]
+            },
+            source="INVESTIGATION_ENGINE"
+        )
+    )
+
+    contradiction_edges = builder.graph.edges_by_relation(
+        EdgeRelation.CONTRADICTS
+    )
+
+    assert len(contradiction_edges) == 1
+    assert contradiction_edges[0].source == evidence.id
+    assert contradiction_edges[0].target == hypothesis.id
