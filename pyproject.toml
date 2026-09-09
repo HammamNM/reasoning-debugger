@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "clinical-reasoning-kernel"
+version = "1.0.0"
+description = "A deterministic, domain-agnostic reasoning compiler for clinical AI agents."
+authors = [{name = "Reasoning Architect"}]
+dependencies = []
+requires-python = ">=3.9"
+
+[project.scripts]
+reasoning-cli = "kernel.cli:main"
