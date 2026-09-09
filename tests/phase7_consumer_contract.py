@@ -1,48 +1,15 @@
 from kernel.api import (
     DebugFinding,
-    ReasoningDebugger,
-    ReasoningEvent,
-    EventStream,
-    Edge,
-    EdgeRelation,
-    ReasoningGraph,
+    InvalidTraceSchemaError,
     PrimitiveType,
-    ReasoningUnit,
-    ParserPipeline,
+    ReasoningDebugger,
+    ReasoningKernelError,
     ReasoningTrace,
     ReasoningTraceEvent,
-    KernelRuntime,
-    KernelSession,
 )
 
 
-def test_external_consumer_can_construct_core_objects():
-    graph = ReasoningGraph()
-
-    unit = ReasoningUnit(
-        id="unit-1",
-        primitive=PrimitiveType.OBSERVATION,
-        content="Patient observed.",
-    )
-
-    graph.add_node(unit)
-
-    assert graph.nodes[0].id == "unit-1"
-    assert graph.nodes[0].primitive == PrimitiveType.OBSERVATION
-
-
-def test_external_consumer_can_build_parser_pipeline():
-    pipeline = ParserPipeline()
-
-    result = pipeline.process(
-        "Patient observed. Evidence collected."
-    )
-
-    assert result.units
-    assert result.graph is not None
-
-
-def test_external_consumer_can_build_trace():
+def test_external_consumer_can_construct_public_trace():
     trace = ReasoningTrace(
         events=(
             ReasoningTraceEvent(
@@ -55,6 +22,11 @@ def test_external_consumer_can_build_trace():
 
     assert len(trace.events) == 1
     assert trace.events[0].id == "event-1"
+
+
+def test_external_consumer_can_use_public_primitive_types():
+    assert PrimitiveType.OBSERVATION.name == "OBSERVATION"
+    assert PrimitiveType.INFERENCE.name == "INFERENCE"
 
 
 def test_external_consumer_can_use_debugger():
@@ -74,9 +46,22 @@ def test_external_consumer_can_use_debugger():
     assert all(isinstance(item, DebugFinding) for item in result)
 
 
-def test_external_consumer_can_create_runtime():
-    session = KernelSession()
-    runtime = KernelRuntime(session)
+def test_external_consumer_can_roundtrip_trace():
+    trace = ReasoningTrace(
+        events=(
+            ReasoningTraceEvent(
+                "event-1",
+                "Observation.",
+                "OBSERVATION",
+            ),
+        )
+    )
 
-    assert runtime.session is session
-    assert runtime.event_queue == []
+    restored = ReasoningTrace.from_dict(trace.to_dict())
+
+    assert restored.to_dict() == trace.to_dict()
+
+
+def test_public_error_types_are_constructible():
+    assert issubclass(InvalidTraceSchemaError, ReasoningKernelError)
+    assert issubclass(ReasoningKernelError, Exception)

@@ -5,36 +5,12 @@ import sys
 def test_kernel_can_be_consumed_as_black_box():
     code = r"""
 from kernel.api import (
+    DebugFinding,
     PrimitiveType,
-    ReasoningUnit,
-    ReasoningGraph,
-    ParserPipeline,
+    ReasoningDebugger,
     ReasoningTrace,
     ReasoningTraceEvent,
-    ReasoningDebugger,
-    KernelSession,
-    KernelRuntime,
 )
-
-graph = ReasoningGraph()
-
-unit = ReasoningUnit(
-    id="external-1",
-    primitive=PrimitiveType.OBSERVATION,
-    content="External observation.",
-)
-
-graph.add_node(unit)
-
-assert graph.nodes[0].id == "external-1"
-
-pipeline = ParserPipeline()
-result = pipeline.process(
-    "Observation recorded. Investigation started."
-)
-
-assert result.units
-assert result.graph is not None
 
 trace = ReasoningTrace(
     events=(
@@ -46,15 +22,13 @@ trace = ReasoningTrace(
     )
 )
 
-assert len(trace.events) == 1
+assert PrimitiveType.OBSERVATION.name == "OBSERVATION"
 
 findings = ReasoningDebugger().debug(trace)
+
 assert isinstance(findings, list)
-
-session = KernelSession()
-runtime = KernelRuntime(session)
-
-assert runtime.session is session
+assert all(isinstance(item, DebugFinding) for item in findings)
+assert len(trace.events) == 1
 """
 
     result = subprocess.run(
@@ -66,46 +40,49 @@ assert runtime.session is session
     assert result.returncode == 0, result.stderr
 
 
-def test_black_box_consumer_does_not_import_internal_modules():
-    code = r"""
-from kernel.api import (
-    ReasoningGraph,
-    ReasoningUnit,
-    PrimitiveType,
-)
-
-graph = ReasoningGraph()
-
-graph.add_node(
-    ReasoningUnit(
-        id="black-box-1",
-        primitive=PrimitiveType.OBSERVATION,
-        content="Observation.",
+def test_black_box_consumer_cannot_access_internal_symbols():
+    forbidden = (
+        "ReasoningEvent",
+        "EventStream",
+        "create_event",
+        "Edge",
+        "EdgeRelation",
+        "ReasoningGraph",
+        "ReasoningUnit",
+        "ParserPipeline",
+        "QueryEngine",
+        "KernelRuntime",
+        "KernelSession",
     )
-)
 
-assert graph.nodes
+    for symbol in forbidden:
+        code = f"""
+from kernel.api import {symbol}
 """
 
-    result = subprocess.run(
-        [sys.executable, "-c", code],
-        capture_output=True,
-        text=True,
-    )
+        result = subprocess.run(
+            [sys.executable, "-c", code],
+            capture_output=True,
+            text=True,
+        )
 
-    assert result.returncode == 0, result.stderr
+        assert result.returncode != 0, (
+            f"Internal symbol leaked: {symbol}"
+        )
 
 
-def test_consumer_source_contains_no_kernel_internal_imports():
+def test_consumer_source_contains_no_internal_module_imports():
     consumer_code = r"""
 from kernel.api import (
-    ReasoningGraph,
-    ReasoningUnit,
+    DebugFinding,
     PrimitiveType,
+    ReasoningDebugger,
+    ReasoningTrace,
+    ReasoningTraceEvent,
 )
 """
 
-    forbidden = (
+    forbidden_modules = (
         "from kernel.models",
         "from kernel.graph",
         "from kernel.events",
@@ -114,9 +91,10 @@ from kernel.api import (
         "from kernel.debugger",
         "from kernel.reasoning_trace",
         "from kernel.parser_pipeline",
+        "from kernel.query_engine",
     )
 
     assert not any(
         statement in consumer_code
-        for statement in forbidden
+        for statement in forbidden_modules
     )

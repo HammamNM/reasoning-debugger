@@ -5,29 +5,12 @@ import sys
 def test_external_consumer_uses_only_public_kernel_api():
     code = """
 from kernel.api import (
-    ReasoningGraph,
-    ReasoningUnit,
+    DebugFinding,
     PrimitiveType,
-    ParserPipeline,
+    ReasoningDebugger,
     ReasoningTrace,
     ReasoningTraceEvent,
-    ReasoningDebugger,
-    KernelSession,
-    KernelRuntime,
 )
-
-graph = ReasoningGraph()
-
-unit = ReasoningUnit(
-    id="external-1",
-    primitive=PrimitiveType.OBSERVATION,
-    content="External consumer observation.",
-)
-
-graph.add_node(unit)
-
-pipeline = ParserPipeline()
-parsed = pipeline.process("Observation. Evidence.")
 
 trace = ReasoningTrace(
     events=(
@@ -39,16 +22,13 @@ trace = ReasoningTrace(
     )
 )
 
+assert PrimitiveType.OBSERVATION.name == "OBSERVATION"
+
 findings = ReasoningDebugger().debug(trace)
 
-session = KernelSession()
-runtime = KernelRuntime(session)
-
-assert graph.nodes[0].id == "external-1"
-assert parsed.units
-assert len(trace.events) == 1
 assert isinstance(findings, list)
-assert runtime.session is session
+assert all(isinstance(item, DebugFinding) for item in findings)
+assert len(trace.events) == 1
 """
 
     result = subprocess.run(
@@ -58,3 +38,32 @@ assert runtime.session is session
     )
 
     assert result.returncode == 0, result.stderr
+
+
+def test_external_consumer_cannot_import_kernel_internals_from_public_api():
+    forbidden_symbols = [
+        "ReasoningEvent",
+        "EventStream",
+        "create_event",
+        "Edge",
+        "EdgeRelation",
+        "ReasoningGraph",
+        "ReasoningUnit",
+        "ParserPipeline",
+        "QueryEngine",
+        "KernelRuntime",
+        "KernelSession",
+    ]
+
+    for symbol in forbidden_symbols:
+        code = f"from kernel.api import {symbol}"
+
+        result = subprocess.run(
+            [sys.executable, "-c", code],
+            capture_output=True,
+            text=True,
+        )
+
+        assert result.returncode != 0, (
+            f"{symbol} leaked through kernel.api"
+        )
