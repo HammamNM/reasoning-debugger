@@ -1,5 +1,6 @@
 from kernel.graph import EdgeRelation, ReasoningGraph
 from kernel.models import PrimitiveType, ReasoningUnit
+from kernel.provenance import ProvenanceRecord
 from kernel.reasoning_trace import ReasoningTrace
 
 class TraceGraphAdapter:
@@ -38,7 +39,16 @@ class TraceGraphAdapter:
             if primitive is None:
                 raise ValueError(f"Unknown trace event_type: {event.event_type}")
 
-            unit = ReasoningUnit(id=event.id, primitive=primitive, content=event.content)
+            unit = ReasoningUnit(
+                id=event.id,
+                primitive=primitive,
+                content=event.content,
+                provenance=ProvenanceRecord(
+                    source="TRACE",
+                    event_type=event.event_type,
+                    metadata=dict(event.metadata or {}),
+                ),
+            )
             graph.add_node(unit)
 
             if previous_id is not None:

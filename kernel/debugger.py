@@ -2,6 +2,7 @@ from kernel.failure_propagation import FailurePropagationAnalyzer
 from kernel.reasoning_failure_detector import UnsupportedAssumptionDetector
 from kernel.structural_failure_detector import StructuralFailureDetector
 from kernel.trace_graph_adapter import TraceGraphAdapter
+from kernel.unsupported_inference_detector import UnsupportedInferenceDetector
 from kernel.reasoning_trace import ReasoningTrace
 
 
@@ -25,6 +26,7 @@ class ReasoningDebugger:
         structural_failure_detector=None,
         propagation_analyzer=None,
         trace_graph_adapter=None,
+        unsupported_inference_detector=None,
     ):
         self.reasoning_failure_detector = (
             reasoning_failure_detector or UnsupportedAssumptionDetector()
@@ -37,6 +39,9 @@ class ReasoningDebugger:
         )
         self.trace_graph_adapter = (
             trace_graph_adapter or TraceGraphAdapter()
+        )
+        self.unsupported_inference_detector = (
+            unsupported_inference_detector or UnsupportedInferenceDetector()
         )
 
         self._validate_dependency(
@@ -58,6 +63,11 @@ class ReasoningDebugger:
             self.trace_graph_adapter,
             "trace_graph_adapter",
             ("build",),
+        )
+        self._validate_dependency(
+            self.unsupported_inference_detector,
+            "unsupported_inference_detector",
+            ("detect",),
         )
 
     @staticmethod
@@ -104,6 +114,16 @@ class ReasoningDebugger:
         # Convert the immutable trace representation into the graph
         # representation required by graph-based detectors.
         graph = self.trace_graph_adapter.build(trace)
+
+        # Graph-level unsupported-inference analysis.
+        unsupported_inference_findings = (
+            self.unsupported_inference_detector.detect(graph)
+        )
+        self._validate_findings(
+            unsupported_inference_findings,
+            "unsupported_inference_detector",
+        )
+        findings.extend(unsupported_inference_findings)
 
         # Graph-level structural analysis.
         findings.extend(
