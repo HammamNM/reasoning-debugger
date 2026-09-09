@@ -1,0 +1,9 @@
+{
+  "source": "SWE-agent Official Repository",
+  "source_url": "https://raw.githubusercontent.com/SWE-agent/SWE-agent/main/trajectories/demonstrations/replay__marshmallow-code__marshmallow-1867__default__t-0.20__p-0.95__c-2.00__install-1___install_from_source/marshmallow-code__marshmallow-1867.traj",
+  "trajectory_format": ".traj JSON",
+  "instance_id": "marshmallow-code__marshmallow-1867",
+  "retrieved_at_utc": "2026-09-09T05:54:09.723197+00:00",
+  "file_size_bytes": 81519,
+  "sha256": "8856076ec31832f20aefa7f0a2714e3ad6bc752f14815d94d2e852e50213a459"
+}
