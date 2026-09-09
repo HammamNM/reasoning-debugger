@@ -1,4 +1,5 @@
-from kernel.api import DebugFinding, ReasoningDebugger
+from kernel.api import DebugFinding
+from kernel.api import ReasoningDebugger
 from kernel.reasoning_trace import ReasoningTrace, ReasoningTraceEvent
 
 

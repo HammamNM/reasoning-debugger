@@ -86,6 +86,10 @@ class ReasoningDebugger:
                 )
 
     def debug(self, trace):
+        from kernel.reasoning_trace import ReasoningTrace
+        if not isinstance(trace, ReasoningTrace):
+            from kernel.errors import InvalidTraceSchemaError
+            raise InvalidTraceSchemaError(f'Expected ReasoningTrace, got {type(trace)}')
         if not isinstance(trace, ReasoningTrace):
             raise TypeError("trace must be a ReasoningTrace")
 

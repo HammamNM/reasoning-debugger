@@ -1,4 +1,4 @@
-from kernel.api import (
+from kernel.api import ( # fallback
     ParserPipeline,
     ReasoningDebugger,
     ReasoningTrace,

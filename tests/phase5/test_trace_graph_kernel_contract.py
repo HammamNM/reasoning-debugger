@@ -63,7 +63,7 @@ def test_adapter_preserves_real_kernel_event_order():
 
 
 def test_debugger_rejects_invalid_trace():
-    from kernel.debugger import ReasoningDebugger
+    from kernel.api import ReasoningDebugger, InvalidTraceSchemaError
 
-    with pytest.raises(TypeError):
+    with pytest.raises(InvalidTraceSchemaError):
         ReasoningDebugger().debug(object())

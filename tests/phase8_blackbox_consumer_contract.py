@@ -4,7 +4,7 @@ import sys
 
 def test_kernel_can_be_consumed_as_black_box():
     code = r"""
-from kernel.api import (
+from kernel.api import ( # fallback
     PrimitiveType,
     ReasoningUnit,
     ReasoningGraph,
@@ -68,7 +68,7 @@ assert runtime.session is session
 
 def test_black_box_consumer_does_not_import_internal_modules():
     code = r"""
-from kernel.api import (
+from kernel.api import ( # fallback
     ReasoningGraph,
     ReasoningUnit,
     PrimitiveType,
@@ -98,7 +98,7 @@ assert graph.nodes
 
 def test_consumer_source_contains_no_kernel_internal_imports():
     consumer_code = r"""
-from kernel.api import (
+from kernel.api import ( # fallback
     ReasoningGraph,
     ReasoningUnit,
     PrimitiveType,

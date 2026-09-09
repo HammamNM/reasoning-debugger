@@ -1,7 +1,7 @@
 import sys
 import kernel.api
 
-from kernel.api import (
+from kernel.api import ( # fallback
     DebugFinding,
     ReasoningDebugger,
     ReasoningEvent,

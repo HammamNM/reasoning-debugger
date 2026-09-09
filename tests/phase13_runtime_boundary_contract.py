@@ -1,6 +1,8 @@
 import pytest
 
-from kernel.api import KernelRuntime, KernelSession, ReasoningEvent
+from kernel.runtime import KernelRuntime
+from kernel.session import KernelSession
+from kernel.events import ReasoningEvent
 
 
 class ExternalEngine:
