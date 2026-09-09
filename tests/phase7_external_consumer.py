@@ -4,7 +4,7 @@ import sys
 
 def test_external_consumer_uses_only_public_kernel_api():
     code = """
-from kernel.api import ( # fallback
+from kernel.api import (
     ReasoningGraph,
     ReasoningUnit,
     PrimitiveType,
