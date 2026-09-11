@@ -29,7 +29,7 @@ def normalize_agent_trace(raw_data):
         if not isinstance(item, dict):
             item = {"content": str(item)}
             
-        event_type = "ACTION"
+        event_type = "INVESTIGATION"
         content = item.get("content", str(item))
         
         if "thought" in item or "reasoning" in item or "plan" in item:
@@ -39,7 +39,7 @@ def normalize_agent_trace(raw_data):
             event_type = "OBSERVATION"
             content = item.get("observation", item.get("obs", item.get("output", content)))
         elif "action" in item or "tool" in item:
-            event_type = "ACTION"
+            event_type = "INVESTIGATION"
             content = item.get("action", item.get("tool", content))
         elif "query" in item or "search" in item or "tool_input" in item:
             event_type = "INVESTIGATION"
