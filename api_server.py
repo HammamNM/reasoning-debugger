@@ -54,112 +54,98 @@ DASHBOARD_HTML = """
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reasoning Debugger</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; background: #f8f9fa; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 1200px; margin: auto; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .input-section { background: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 20px; }
+        .file-upload { margin-bottom: 15px; font-weight: bold; }
+        textarea { width: 100%; height: 200px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-family: monospace; box-sizing: border-box; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 8px; cursor: pointer; margin-top: 15px; width: 100%; }
+        button:hover { background: #0056b3; }
+        #graph-container { background: white; border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-top: 20px; min-height: 400px; text-align: center; overflow: auto; }
+        #error-msg { color: #dc3545; font-weight: bold; margin-top: 10px; text-align: center; }
+    </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/viz.js/2.1.2/viz.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/viz.js/2.1.2/full.render.js"></script>
-
-    
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/viz.js/2.1.2/viz.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/viz.js/2.1.2/full.render.js"></script>
 </head>
-<body class="bg-gray-50 p-8 font-sans">
-    <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md border-t-4 border-blue-600">
-        <h1 class="text-3xl font-bold text-gray-800 mb-2">🔬 Reasoning Debugger</h1>
-        <p class="text-gray-600 mb-6 font-medium">Connect your AI agent trace. We normalize the trace and detect supported reasoning failures with evidence-based explanations.</p>
-        
-        <input type="file" id="fileInput" accept=".json" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 mb-6 cursor-pointer" />
-        
-        <div id="results" class="hidden">
-            <div id="statusAlert" class="p-4 mb-4 rounded-md border"></div>
-            <h3 class="text-lg font-bold text-gray-700 mb-2 mt-6" id="graphTitle" style="display:none;">Trace Graph:</h3>
-            <div id="graphContainer" class="border p-4 rounded-md bg-white shadow-inner overflow-auto flex justify-center"></div>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Reasoning Debugger</h1>
+            <p>Upload a trace file or paste JSON below</p>
         </div>
+        
+        <div class="input-section">
+            <div class="file-upload">
+                <label for="file-input">📂 Upload Trace File: </label>
+                <input type="file" id="file-input" accept=".json,.traj,.txt" onchange="handleFileUpload(event)">
+            </div>
+            <textarea id="trace-input" placeholder='{"events": [...]}'></textarea>
+            <button onclick="processTrace()">Debug Trace</button>
+            <div id="error-msg"></div>
+        </div>
+
+        <div id="graph-container">Trace Graph will appear here...</div>
     </div>
 
     <script>
-        const errorDictionary = {
-            "unsupported_inference": {
-                title: "The agent made an inference without supporting evidence.",
-                why: "The subsequent actions depend on this unsupported inference, leading to hallucinated or incorrect outputs."
-            }
-        };
-
-        document.getElementById('fileInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
-            reader.onload = async function(event) {
-                try {
-                    const traceData = JSON.parse(event.target.result);
-                    const response = await fetch('/debug', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify(traceData)
-                    });
-                    
-                    const result = await response.json();
-                    const resultsDiv = document.getElementById('results');
-                    const statusAlert = document.getElementById('statusAlert');
-                    const graphContainer = document.getElementById('graphContainer');
-                    const graphTitle = document.getElementById('graphTitle');
-                    
-                    resultsDiv.classList.remove('hidden');
-                    
-                    if (result.error) {
-                        statusAlert.className = 'p-4 mb-4 rounded-md bg-yellow-50 border border-yellow-200 text-yellow-800';
-                        statusAlert.innerHTML = `<strong>Normalization Info:</strong> ${result.error}`;
-                        graphContainer.innerHTML = '';
-                        graphTitle.style.display = 'none';
-                        return;
-                    }
-                    
-                    if (result.findings_count > 0) {
-                        statusAlert.className = 'p-5 mb-4 rounded-md bg-red-50 border border-red-200';
-                        
-                        let findingsHtml = result.findings.map(f => {
-                            let mappedError = errorDictionary[f.failure_type] || { title: f.failure_type, why: f.explanation };
-                            let impactCount = f.affected_event_ids ? f.affected_event_ids.length : 0;
-                            
-                            return `
-                                <div class="mt-2 p-4 bg-white rounded border border-red-100 shadow-sm">
-                                    <h4 class="font-bold text-red-900 text-lg">First reasoning failure</h4>
-                                    <p class="text-red-700 font-medium mt-1">${mappedError.title}</p>
-                                    <div class="mt-3 text-sm text-gray-700 grid grid-cols-2 gap-4">
-                                        <div><strong>Started at:</strong> <span class="bg-gray-100 px-2 py-1 rounded font-mono">${f.event_id}</span></div>
-                                        <div><strong>Downstream impact:</strong> ${impactCount} actions affected</div>
-                                    </div>
-                                    <div class="mt-4 p-3 bg-red-50 text-sm text-gray-800 border-l-4 border-red-400 rounded-r">
-                                        <strong>Why this matters:</strong> ${mappedError.why}
-                                    </div>
-                                </div>
-                            `;
-                        }).join('');
-
-                        statusAlert.innerHTML = `<h3 class="text-xl font-bold text-red-800 mb-3">⚠️ Agent Run Failed</h3>` + findingsHtml;
-                        
-                        if(result.dot_graph) {
-                            graphTitle.style.display = 'block';
-                            let viz = new Viz();
-                            viz.renderSVGElement(result.dot_graph)
-                            .then(function(element) {
-                                graphContainer.innerHTML = '';
-                                graphContainer.appendChild(element);
-                            })
-                            .catch(error => { console.error(error); });
-                        }
-                    } else {
-                        statusAlert.className = 'p-4 mb-4 rounded-md bg-green-50 border border-green-200 text-green-800';
-                        statusAlert.innerHTML = '<strong>✅ Trace normalized successfully. 0 Semantic Findings. (Insufficient causal metadata to prove failure).</strong>';
-                        graphContainer.innerHTML = '';
-                        graphTitle.style.display = 'none';
-                    }
-                } catch (err) {
-                    alert("Error processing file: " + err);
-                }
+            reader.onload = function(e) {
+                document.getElementById("trace-input").value = e.target.result;
             };
             reader.readAsText(file);
-        });
+        }
+
+        async function processTrace() {
+            const inputData = document.getElementById("trace-input").value;
+            const errorMsg = document.getElementById("error-msg");
+            const graphContainer = document.getElementById("graph-container");
+            
+            if (!inputData.trim()) {
+                errorMsg.innerText = "Please provide trace data.";
+                return;
+            }
+
+            errorMsg.innerText = "";
+            graphContainer.innerHTML = "Processing...";
+
+            try {
+                const parsedData = JSON.parse(inputData);
+                const response = await fetch("/debug", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(parsedData)
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || "Unknown error occurred");
+                }
+
+                let viz = new Viz();
+                viz.renderSVGElement(result.dot_graph)
+                .then(function(element) {
+                    graphContainer.innerHTML = "";
+                    element.style.width = "100%";
+                    element.style.height = "auto";
+                    graphContainer.appendChild(element);
+                })
+                .catch(error => {
+                    viz = new Viz();
+                    errorMsg.innerText = "Error rendering graph.";
+                    console.error(error);
+                });
+
+            } catch (err) {
+                errorMsg.innerText = "Error: " + err.message;
+                graphContainer.innerHTML = "";
+            }
+        }
     </script>
 </body>
 </html>
