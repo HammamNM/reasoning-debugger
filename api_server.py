@@ -208,5 +208,43 @@ def debug_trace():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
+@app.route('/api/v1/debug', methods=['POST'])
+def api_debug():
+    try:
+        raw_data = request.get_json()
+        if not raw_data:
+            return jsonify({"error": "No JSON data provided"}), 400
+            
+        # 1. Normalize data
+        normalized_data = normalize_agent_trace(raw_data)
+        
+        # 2. Parse trace
+        trace = ReasoningTrace.model_validate(normalized_data)
+        
+        # 3. Initialize debugger
+        debugger = ReasoningDebugger()
+        findings = debugger.debug(trace)
+        
+        # 4. Format output
+        results = []
+        for f in findings:
+            results.append({
+                "event_id": f.event_id,
+                "failure_type": f.failure_type,
+                "explanation": f.explanation,
+                "affected_actions_count": len(f.affected_event_ids)
+            })
+            
+        return jsonify({
+            "status": "success",
+            "total_events": len(trace.events),
+            "failures_detected": len(results),
+            "findings": results
+        }), 200
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8000)
