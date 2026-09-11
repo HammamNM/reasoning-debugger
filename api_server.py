@@ -57,6 +57,10 @@ DASHBOARD_HTML = """
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/viz.js/2.1.2/viz.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/viz.js/2.1.2/full.render.js"></script>
+
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="https://unpkg.com/@hpcc-js/wasm@2.20.0/dist/index.min.js"></script>
+    <script src="https://unpkg.com/d3-graphviz@3.0.5/build/d3-graphviz.js"></script>
 </head>
 <body class="bg-gray-50 p-8 font-sans">
     <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md border-t-4 border-blue-600">
