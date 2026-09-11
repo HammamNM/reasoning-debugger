@@ -5,47 +5,56 @@ import json
 app = Flask(__name__)
 
 def normalize_agent_trace(raw_data):
-    """
-    Adapter Layer: Translates Real-World Agent traces into Canonical Kernel Trace.
-    Strictly follows the Conservatism Principle: No causal links are hallucinated.
-    """
-    normalized_events = []
-    
-    # 1. Native Kernel Format (Pass-through)
-    if isinstance(raw_data, dict) and 'events' in raw_data and isinstance(raw_data['events'], list):
-        if raw_data['events'] and 'event_type' in raw_data['events'][0]:
+    if isinstance(raw_data, dict) and 'events' in raw_data:
+        if len(raw_data['events']) > 0 and 'event_type' in raw_data['events'][0]:
             return raw_data
+
+    events = []
+    raw_events = []
+
+    if isinstance(raw_data, list):
+        raw_events = raw_data
+    elif isinstance(raw_data, dict):
+        if 'trajectory' in raw_data:
+            raw_events = raw_data['trajectory']
+        elif 'steps' in raw_data:
+            raw_events = raw_data['steps']
+        else:
+            for k, v in raw_data.items():
+                if isinstance(v, list):
+                    raw_events = v
+                    break
+
+    for i, item in enumerate(raw_events):
+        if not isinstance(item, dict):
+            item = {"content": str(item)}
             
-    events_list = raw_data.get('steps', raw_data.get('messages', raw_data)) if isinstance(raw_data, dict) else raw_data
-    
-    if isinstance(events_list, list) and len(events_list) > 0:
-        # 2. OpenAI / Chat-based Format
-        if 'role' in events_list[0]:
-            for i, msg in enumerate(events_list):
-                event_id = msg.get('id', f"msg_{i+1}")
-                metadata = msg.get('metadata', {})
-                
-                if msg.get('role') == 'assistant' and msg.get('tool_calls'):
-                    normalized_events.append({"id": event_id, "event_type": "INVESTIGATION", "content": str(msg['tool_calls']), "metadata": metadata})
-                elif msg.get('role') == 'tool':
-                    normalized_events.append({"id": event_id, "event_type": "EVIDENCE", "content": msg.get('content', ''), "metadata": metadata})
-                elif msg.get('role') == 'assistant' and msg.get('content'):
-                    normalized_events.append({"id": event_id, "event_type": "INFERENCE", "content": msg['content'], "metadata": metadata})
-                    
-        # 3. Generic LangChain / ReAct Format
-        elif 'thought' in events_list[0] or 'action' in events_list[0]:
-            for i, step in enumerate(events_list):
-                event_id = step.get('id', f"step_{i+1}")
-                metadata = step.get('metadata', {})
-                
-                if 'action' in step or 'tool_call' in step:
-                    normalized_events.append({"id": event_id, "event_type": "INVESTIGATION", "content": str(step.get('action', step.get('tool_call'))), "metadata": metadata})
-                elif 'observation' in step or 'result' in step:
-                    normalized_events.append({"id": event_id, "event_type": "EVIDENCE", "content": str(step.get('observation', step.get('result'))), "metadata": metadata})
-                elif 'thought' in step or 'reasoning' in step:
-                    normalized_events.append({"id": event_id, "event_type": "INFERENCE", "content": str(step.get('thought', step.get('reasoning'))), "metadata": metadata})
-                
-    return {"events": normalized_events}
+        event_type = "ACTION"
+        content = item.get("content", str(item))
+        
+        if "thought" in item or "reasoning" in item or "plan" in item:
+            event_type = "INFERENCE"
+            content = item.get("thought", item.get("reasoning", item.get("plan", content)))
+        elif "observation" in item or "obs" in item or "output" in item:
+            event_type = "OBSERVATION"
+            content = item.get("observation", item.get("obs", item.get("output", content)))
+        elif "action" in item or "tool" in item:
+            event_type = "ACTION"
+            content = item.get("action", item.get("tool", content))
+        elif "query" in item or "search" in item or "tool_input" in item:
+            event_type = "INVESTIGATION"
+            content = item.get("query", item.get("search", item.get("tool_input", content)))
+        elif "event_type" in item:
+            event_type = item["event_type"]
+
+        events.append({
+            "id": item.get("id", f"e{i+1}"),
+            "event_type": str(event_type).upper(),
+            "content": str(content),
+            "metadata": item.get("metadata", item)
+        })
+        
+    return {"events": events}
 
 DASHBOARD_HTML = """
 <!DOCTYPE html>
