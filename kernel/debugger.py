@@ -4,6 +4,7 @@ from kernel.structural_failure_detector import StructuralFailureDetector
 from kernel.trace_graph_adapter import TraceGraphAdapter
 from kernel.unsupported_inference_detector import UnsupportedInferenceDetector
 from kernel.reasoning_trace import ReasoningTrace
+from kernel.infinite_loop_detector import InfiniteLoopDetector
 
 
 class ReasoningDebugger:
@@ -27,6 +28,7 @@ class ReasoningDebugger:
         propagation_analyzer=None,
         trace_graph_adapter=None,
         unsupported_inference_detector=None,
+        infinite_loop_detector=None,
     ):
         self.reasoning_failure_detector = (
             reasoning_failure_detector or UnsupportedAssumptionDetector()
@@ -42,6 +44,9 @@ class ReasoningDebugger:
         )
         self.unsupported_inference_detector = (
             unsupported_inference_detector or UnsupportedInferenceDetector()
+        )
+        self.infinite_loop_detector = (
+            infinite_loop_detector or InfiniteLoopDetector()
         )
 
         self._validate_dependency(
@@ -63,6 +68,11 @@ class ReasoningDebugger:
             self.trace_graph_adapter,
             "trace_graph_adapter",
             ("build",),
+        )
+        self._validate_dependency(
+            self.infinite_loop_detector,
+            "infinite_loop_detector",
+            ("detect",),
         )
         self._validate_dependency(
             self.unsupported_inference_detector,
@@ -97,6 +107,7 @@ class ReasoningDebugger:
 
     def debug(self, trace):
         from kernel.reasoning_trace import ReasoningTrace
+from kernel.infinite_loop_detector import InfiniteLoopDetector
         if not isinstance(trace, ReasoningTrace):
             from kernel.errors import InvalidTraceSchemaError
             raise InvalidTraceSchemaError(f'Expected ReasoningTrace, got {type(trace)}')
@@ -107,6 +118,11 @@ class ReasoningDebugger:
         findings = list(
             self.reasoning_failure_detector.detect(trace)
         )
+
+        # Trace-level infinite loop detection
+        loop_findings = self.infinite_loop_detector.detect(trace)
+        self._validate_findings(loop_findings, "infinite_loop_detector")
+        findings.extend(loop_findings)
 
         # Every detector must return DebugFinding objects.
         self._validate_findings(findings, "reasoning_failure_detector")
