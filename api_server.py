@@ -89,6 +89,15 @@ DASHBOARD_HTML = """
         #graph-container { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 25px; margin-top: 20px; min-height: 100px; text-align: center; overflow: auto; }
         #error-msg { color: #ef4444; font-weight: 600; margin-top: 15px; text-align: center; }
         #download-btn { display: none; margin-top: 15px; width: 100%; }
+        
+        /* Modal Styles */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
+        .modal-content { background: var(--surface); padding: 30px; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border: 1px solid var(--border); position: relative; }
+        .close-btn { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text); }
+        .modal-title { color: #ef4444; margin-top: 0; font-size: 20px; font-weight: bold; display: flex; align-items: center; gap: 8px;}
+        .modal-desc { margin-top: 15px; line-height: 1.5; font-size: 15px;}
+        .node { cursor: pointer; transition: filter 0.2s; }
+        .node:hover { filter: drop-shadow(0 0 5px rgba(37,99,235,0.4)); }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/viz.js/2.1.2/viz.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/viz.js/2.1.2/full.render.js"></script>
@@ -124,16 +133,24 @@ DASHBOARD_HTML = """
         <button id="download-btn" class="btn-secondary" onclick="downloadSVG()">📥 Download Graph as SVG</button>
     </div>
 
+    <div id="failure-modal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal()">×</button>
+            <div class="modal-title" id="modal-title">⚠️ Failure Detected</div>
+            <div class="modal-desc" id="modal-desc">Details...</div>
+        </div>
+    </div>
+
     <script>
+        let currentFindings = [];
+
         function toggleTheme() {
             const html = document.documentElement;
             const toggle = document.querySelector('.theme-toggle');
             if (html.getAttribute('data-theme') === 'light') {
-                html.setAttribute('data-theme', 'dark');
-                toggle.textContent = '☀️';
+                html.setAttribute('data-theme', 'dark'); toggle.textContent = '☀️';
             } else {
-                html.setAttribute('data-theme', 'light');
-                toggle.textContent = '🌙';
+                html.setAttribute('data-theme', 'light'); toggle.textContent = '🌙';
             }
         }
 
@@ -168,14 +185,21 @@ DASHBOARD_HTML = """
             errorMsg.innerText = "";
             graphContainer.innerHTML = "Processing...";
             downloadBtn.style.display = 'none';
+            currentFindings = [];
 
             try {
-                const response = await fetch("/api/v1/debug", {
+                // Fetch API for logic data
+                const apiResponse = await fetch("/api/v1/debug", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(JSON.parse(inputData))
                 });
+                const apiResult = await apiResponse.json();
+                if (apiResponse.ok && apiResult.findings) {
+                    currentFindings = apiResult.findings;
+                }
                 
+                // Fetch UI graph
                 const uiResponse = await fetch("/debug", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -192,11 +216,34 @@ DASHBOARD_HTML = """
                     element.style.height = "auto";
                     graphContainer.appendChild(element);
                     downloadBtn.style.display = 'block';
+                    makeNodesInteractive(element);
                 }).catch(error => { errorMsg.innerText = "Error rendering graph."; });
             } catch (err) {
                 errorMsg.innerText = "Error: " + err.message;
                 graphContainer.innerHTML = "";
             }
+        }
+
+        function makeNodesInteractive(svgElement) {
+            const nodes = svgElement.querySelectorAll('.node');
+            nodes.forEach(node => {
+                node.addEventListener('click', () => {
+                    const titleEl = node.querySelector('title');
+                    if (!titleEl) return;
+                    const nodeId = titleEl.textContent.trim();
+                    const finding = currentFindings.find(f => f.event_id === nodeId);
+                    
+                    if (finding) {
+                        document.getElementById('modal-title').innerText = "⚠️ " + finding.failure_type.replace(/_/g, ' ');
+                        document.getElementById('modal-desc').innerText = finding.explanation;
+                        document.getElementById('failure-modal').style.display = 'flex';
+                    }
+                });
+            });
+        }
+
+        function closeModal() {
+            document.getElementById('failure-modal').style.display = 'none';
         }
 
         function downloadSVG() {
