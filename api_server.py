@@ -72,8 +72,11 @@ DASHBOARD_HTML = """
         .header { text-align: center; margin-bottom: 30px; }
         .logo { font-size: 28px; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .logo span { color: var(--text); }
-        .badge { display: inline-block; background: #e0e7ff; color: #4338ca; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-top: 8px; }
+        .badges { display: flex; justify-content: center; gap: 10px; margin-top: 8px; }
+        .badge { display: inline-block; background: #e0e7ff; color: #4338ca; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; text-decoration: none; }
+        .badge-docs { background: var(--text); color: var(--bg); }
         [data-theme="dark"] .badge { background: #3730a3; color: #e0e7ff; }
+        [data-theme="dark"] .badge-docs { background: var(--primary); color: white; }
         .input-section { background: var(--surface); padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border); margin-bottom: 25px; }
         .file-upload { margin-bottom: 15px; font-weight: 600; }
         textarea { width: 100%; height: 220px; padding: 15px; border: 1px solid var(--border); border-radius: 8px; font-family: 'Consolas', monospace; box-sizing: border-box; background: var(--bg); color: var(--text); resize: vertical; margin-top: 10px; }
@@ -83,8 +86,9 @@ DASHBOARD_HTML = """
         button:hover { opacity: 0.9; }
         .btn-secondary { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
         [data-theme="dark"] .btn-secondary { border-color: var(--text); color: var(--text); }
-        #graph-container { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 25px; margin-top: 20px; min-height: 400px; text-align: center; overflow: auto; }
+        #graph-container { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 25px; margin-top: 20px; min-height: 100px; text-align: center; overflow: auto; }
         #error-msg { color: #ef4444; font-weight: 600; margin-top: 15px; text-align: center; }
+        #download-btn { display: none; margin-top: 15px; width: 100%; }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/viz.js/2.1.2/viz.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/viz.js/2.1.2/full.render.js"></script>
@@ -97,7 +101,10 @@ DASHBOARD_HTML = """
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
                 Reasoning<span>Debugger</span>
             </div>
-            <div class="badge">Powered by nexoramed.online</div>
+            <div class="badges">
+                <div class="badge">Powered by nexoramed.online</div>
+                <a href="/docs" class="badge badge-docs">📖 API Docs</a>
+            </div>
         </div>
         
         <div class="input-section">
@@ -107,13 +114,14 @@ DASHBOARD_HTML = """
             </div>
             <textarea id="trace-input" placeholder='{"events": [...]}'></textarea>
             <div class="btn-group">
-                <button onclick="loadSample()" class="btn-secondary">Load Sample Trace</button>
+                <button onclick="loadSample()" class="btn-secondary">Load Sample</button>
                 <button onclick="processTrace()">Debug Trace</button>
             </div>
             <div id="error-msg"></div>
         </div>
 
         <div id="graph-container">Trace Graph will appear here...</div>
+        <button id="download-btn" class="btn-secondary" onclick="downloadSVG()">📥 Download Graph as SVG</button>
     </div>
 
     <script>
@@ -154,10 +162,12 @@ DASHBOARD_HTML = """
             const inputData = document.getElementById("trace-input").value;
             const errorMsg = document.getElementById("error-msg");
             const graphContainer = document.getElementById("graph-container");
+            const downloadBtn = document.getElementById("download-btn");
             
             if (!inputData.trim()) { errorMsg.innerText = "Please provide trace data."; return; }
             errorMsg.innerText = "";
             graphContainer.innerHTML = "Processing...";
+            downloadBtn.style.display = 'none';
 
             try {
                 const response = await fetch("/api/v1/debug", {
@@ -166,7 +176,6 @@ DASHBOARD_HTML = """
                     body: JSON.stringify(JSON.parse(inputData))
                 });
                 
-                // Fetch UI graph internally if API succeeds (temporary bridging logic for UI)
                 const uiResponse = await fetch("/debug", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -182,11 +191,31 @@ DASHBOARD_HTML = """
                     element.style.width = "100%";
                     element.style.height = "auto";
                     graphContainer.appendChild(element);
+                    downloadBtn.style.display = 'block';
                 }).catch(error => { errorMsg.innerText = "Error rendering graph."; });
             } catch (err) {
                 errorMsg.innerText = "Error: " + err.message;
                 graphContainer.innerHTML = "";
             }
+        }
+
+        function downloadSVG() {
+            const svg = document.querySelector("#graph-container svg");
+            if (!svg) return;
+            const serializer = new XMLSerializer();
+            let source = serializer.serializeToString(svg);
+            if(!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)){
+                source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+            }
+            source = '<?xml version="1.0" standalone="no"?>
+' + source;
+            const url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(source);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "reasoning_trace.svg";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         }
     </script>
 </body>
@@ -269,6 +298,65 @@ def api_debug():
 
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+
+
+API_DOCS_HTML = '''<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Documentation - Reasoning Debugger</title>
+    <style>
+        body { font-family: 'Segoe UI', system-ui, sans-serif; padding: 40px 20px; background: #f8fafc; color: #0f172a; line-height: 1.6; max-width: 800px; margin: auto; }
+        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+        h1, h2, h3 { color: #2563eb; }
+        pre { background: #1e293b; color: #f8fafc; padding: 15px; border-radius: 8px; overflow-x: auto; font-family: 'Consolas', monospace; font-size: 14px; }
+        .endpoint { display: inline-block; background: #2563eb; color: white; padding: 4px 10px; border-radius: 6px; font-weight: bold; font-family: monospace; font-size: 16px; margin-bottom: 10px; }
+        a { color: #2563eb; text-decoration: none; font-weight: bold; }
+        a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📖 API Documentation</h1>
+        <p>Integrate the Reasoning Debugger into your CI/CD pipeline or AI agent workflows to automatically detect reasoning failures and infinite loops.</p>
+        
+        <h2>Analyze Trace Endpoint</h2>
+        <div class="endpoint">POST /api/v1/debug</div>
+        <p>Expects a JSON payload containing the reasoning trace to be analyzed.</p>
+        
+        <h3>Request Body Example</h3>
+        <pre><code>{
+  "events": [
+    { "event_type": "INVESTIGATION", "content": "Search database" },
+    { "event_type": "INFERENCE", "content": "Database is hacked" }
+  ]
+}</code></pre>
+        
+        <h3>Success Response Example (200 OK)</h3>
+        <pre><code>{
+  "status": "success",
+  "failures_detected": 1,
+  "findings": [
+    {
+      "event_id": "e2",
+      "failure_type": "UNSUPPORTED_ASSUMPTION",
+      "explanation": "No evidence found to support the assumption.",
+      "affected_actions_count": 0
+    }
+  ],
+  "total_events": 2
+}</code></pre>
+        <br>
+        <a href="/">&larr; Back to Dashboard</a>
+    </div>
+</body>
+</html>'''
+
+@app.route('/docs')
+def api_docs():
+    return API_DOCS_HTML
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8000)
