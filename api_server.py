@@ -72,9 +72,9 @@ DASHBOARD_HTML = """
         .logo { font-size: 28px; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .logo span { color: var(--text); }
         .badges { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
-        .badge { display: inline-block; background: #e0e7ff; color: #4338ca; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; text-decoration: none; }
+        .badge { display: inline-block; background: #e0e7ff; color: #4338ca; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; text-decoration: none; border: none; cursor: pointer; }
         .badge-docs { background: var(--text); color: var(--bg); }
-        .theme-toggle { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; cursor: pointer; padding: 4px 12px; font-size: 16px; color: var(--text); display: flex; align-items: center; justify-content: center; height: 32px; box-sizing: border-box; }
+        .theme-toggle { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; cursor: pointer; padding: 4px 12px; font-size: 16px; color: var(--text); display: flex; align-items: center; justify-content: center; height: 32px; }
         [data-theme="dark"] .badge { background: #3730a3; color: #e0e7ff; }
         [data-theme="dark"] .badge-docs { background: var(--primary); color: white; }
         .input-section { background: var(--surface); padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border); margin-bottom: 25px; }
@@ -92,7 +92,7 @@ DASHBOARD_HTML = """
         
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
         .modal-content { background: var(--surface); padding: 30px; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border: 1px solid var(--border); position: relative; }
-        .close-btn { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text); padding: 0; width: auto; }
+        .close-btn { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text); }
         .modal-title { color: #ef4444; margin-top: 0; font-size: 20px; font-weight: bold; }
         .modal-desc { margin-top: 15px; line-height: 1.5; font-size: 15px;}
         .node { cursor: pointer; transition: filter 0.2s; }
@@ -110,17 +110,17 @@ DASHBOARD_HTML = """
             </div>
             <div class="badges">
                 <div class="badge">Powered by nexoramed.online</div>
-                <a href="/docs" class="badge badge-docs">📖 API Docs</a>
-                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode">🌙</button>
+                <a href="/docs" class="badge badge-docs">API Docs</a>
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode">Theme</button>
             </div>
         </div>
         
         <div class="input-section">
             <div class="file-upload">
-                <label for="file-input">📂 Upload Trace File: </label>
+                <label for="file-input">Upload Trace File: </label>
                 <input type="file" id="file-input" accept=".json,.traj,.txt" onchange="handleFileUpload(event)">
             </div>
-            <textarea id="trace-input" placeholder='{"events": [...]}'></textarea>
+            <textarea id="trace-input" placeholder='{"events": []}'></textarea>
             <div class="btn-group">
                 <button onclick="loadSample()" class="btn-secondary">Load Sample</button>
                 <button onclick="processTrace()">Debug Trace</button>
@@ -129,27 +129,31 @@ DASHBOARD_HTML = """
         </div>
 
         <div id="graph-container">Trace Graph will appear here...</div>
-        <button id="download-btn" class="btn-secondary" onclick="downloadSVG()">📥 Download Graph as SVG</button>
+        <button id="download-btn" class="btn-secondary" onclick="downloadSVG()">Download Graph as SVG</button>
     </div>
 
     <div id="failure-modal" class="modal">
         <div class="modal-content">
-            <button class="close-btn" onclick="closeModal()">✖</button>
-            <div class="modal-title" id="modal-title">⚠️ Failure Detected</div>
+            <button class="close-btn" onclick="closeModal()">X</button>
+            <div class="modal-title" id="modal-title">Failure Detected</div>
             <div class="modal-desc" id="modal-desc">Details...</div>
         </div>
     </div>
 
     <script>
+        window.onerror = function(msg, url, line, col, error) {
+            const errEl = document.getElementById("error-msg");
+            if (errEl) errEl.innerText = "Script Error: " + msg + " (Line " + line + ")";
+        };
+
         let currentFindings = [];
 
         function toggleTheme() {
             const html = document.documentElement;
-            const toggle = document.querySelector('.theme-toggle');
             if (html.getAttribute('data-theme') === 'light') {
-                html.setAttribute('data-theme', 'dark'); toggle.textContent = '☀️';
+                html.setAttribute('data-theme', 'dark');
             } else {
-                html.setAttribute('data-theme', 'light'); toggle.textContent = '🌙';
+                html.setAttribute('data-theme', 'light');
             }
         }
 
@@ -186,29 +190,38 @@ DASHBOARD_HTML = """
             downloadBtn.style.display = 'none';
             currentFindings = [];
 
+            let parsedData;
+            try {
+                parsedData = JSON.parse(inputData);
+            } catch(e) {
+                errorMsg.innerText = "Invalid JSON format: " + e.message;
+                graphContainer.innerHTML = "";
+                return;
+            }
+
             try {
                 try {
                     const apiResponse = await fetch("/api/v1/debug", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(JSON.parse(inputData))
+                        body: JSON.stringify(parsedData)
                     });
                     const apiResult = await apiResponse.json();
                     if (apiResponse.ok && apiResult.findings) {
                         currentFindings = apiResult.findings;
                     }
                 } catch(e) {
-                    console.warn("API info fetch failed, UI will still render.");
+                    console.log("API info fetch failed, continuing to graph render.");
                 }
                 
                 const uiResponse = await fetch("/debug", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(JSON.parse(inputData))
+                    body: JSON.stringify(parsedData)
                 });
                 
                 const result = await uiResponse.json();
-                if (!uiResponse.ok) throw new Error(result.error || "Unknown error occurred");
+                if (!uiResponse.ok) throw new Error(result.error || "Server processing error");
 
                 let viz = new Viz();
                 viz.renderSVGElement(result.dot_graph).then(function(element) {
@@ -218,7 +231,7 @@ DASHBOARD_HTML = """
                     graphContainer.appendChild(element);
                     downloadBtn.style.display = 'block';
                     makeNodesInteractive(element);
-                }).catch(error => { errorMsg.innerText = "Error rendering graph."; });
+                }).catch(error => { errorMsg.innerText = "Graph rendering failed."; });
             } catch (err) {
                 errorMsg.innerText = "Error: " + err.message;
                 graphContainer.innerHTML = "";
@@ -235,7 +248,7 @@ DASHBOARD_HTML = """
                     const finding = currentFindings.find(f => f.event_id === nodeId);
                     
                     if (finding) {
-                        document.getElementById('modal-title').innerText = "⚠️ " + finding.failure_type.replace(/_/g, ' ');
+                        document.getElementById('modal-title').innerText = "Failure: " + finding.failure_type.replace(/_/g, ' ');
                         document.getElementById('modal-desc').innerText = finding.explanation;
                         document.getElementById('failure-modal').style.display = 'flex';
                     }
@@ -252,17 +265,20 @@ DASHBOARD_HTML = """
             if (!svg) return;
             const serializer = new XMLSerializer();
             let source = serializer.serializeToString(svg);
-            if(!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)){
-                source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+            if (source.indexOf('xmlns="http://www.w3.org/2000/svg"') === -1) {
+                source = source.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
             }
-            source = '<?xml version="1.0" standalone="no"?>\r\n' + source;
-            const url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(source);
+            source = '<?xml version="1.0" standalone="no"?>
+' + source;
+            const blob = new Blob([source], {type: "image/svg+xml;charset=utf-8"});
+            const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
             a.download = "reasoning_trace.svg";
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
     </script>
 </body>
