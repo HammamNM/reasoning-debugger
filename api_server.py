@@ -68,13 +68,13 @@ DASHBOARD_HTML = """
         [data-theme="dark"] { --primary: #3b82f6; --bg: #0f172a; --surface: #1e293b; --text: #f8fafc; --border: #334155; }
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--text); transition: all 0.3s ease; }
         .container { max-width: 1000px; margin: auto; position: relative; }
-        .theme-toggle { position: absolute; top: 0; right: 0; background: none; border: 1px solid var(--border); font-size: 20px; cursor: pointer; padding: 8px; border-radius: 50%; color: var(--text); }
         .header { text-align: center; margin-bottom: 30px; }
         .logo { font-size: 28px; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .logo span { color: var(--text); }
-        .badges { display: flex; justify-content: center; gap: 10px; margin-top: 8px; }
-        .badge { display: inline-block; background: #e0e7ff; color: #4338ca; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; text-decoration: none; }
+        .badges { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+        .badge { display: inline-block; background: #e0e7ff; color: #4338ca; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; text-decoration: none; }
         .badge-docs { background: var(--text); color: var(--bg); }
+        .theme-toggle { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; cursor: pointer; padding: 4px 12px; font-size: 16px; color: var(--text); display: flex; align-items: center; justify-content: center; height: 32px; box-sizing: border-box; }
         [data-theme="dark"] .badge { background: #3730a3; color: #e0e7ff; }
         [data-theme="dark"] .badge-docs { background: var(--primary); color: white; }
         .input-section { background: var(--surface); padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border); margin-bottom: 25px; }
@@ -90,11 +90,10 @@ DASHBOARD_HTML = """
         #error-msg { color: #ef4444; font-weight: 600; margin-top: 15px; text-align: center; }
         #download-btn { display: none; margin-top: 15px; width: 100%; }
         
-        /* Modal Styles */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
         .modal-content { background: var(--surface); padding: 30px; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border: 1px solid var(--border); position: relative; }
-        .close-btn { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text); }
-        .modal-title { color: #ef4444; margin-top: 0; font-size: 20px; font-weight: bold; display: flex; align-items: center; gap: 8px;}
+        .close-btn { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text); padding: 0; width: auto; }
+        .modal-title { color: #ef4444; margin-top: 0; font-size: 20px; font-weight: bold; }
         .modal-desc { margin-top: 15px; line-height: 1.5; font-size: 15px;}
         .node { cursor: pointer; transition: filter 0.2s; }
         .node:hover { filter: drop-shadow(0 0 5px rgba(37,99,235,0.4)); }
@@ -104,7 +103,6 @@ DASHBOARD_HTML = """
 </head>
 <body>
     <div class="container">
-        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode">🌙</button>
         <div class="header">
             <div class="logo">
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
@@ -113,6 +111,7 @@ DASHBOARD_HTML = """
             <div class="badges">
                 <div class="badge">Powered by nexoramed.online</div>
                 <a href="/docs" class="badge badge-docs">📖 API Docs</a>
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode">🌙</button>
             </div>
         </div>
         
@@ -135,7 +134,7 @@ DASHBOARD_HTML = """
 
     <div id="failure-modal" class="modal">
         <div class="modal-content">
-            <button class="close-btn" onclick="closeModal()">×</button>
+            <button class="close-btn" onclick="closeModal()">✖</button>
             <div class="modal-title" id="modal-title">⚠️ Failure Detected</div>
             <div class="modal-desc" id="modal-desc">Details...</div>
         </div>
@@ -188,18 +187,20 @@ DASHBOARD_HTML = """
             currentFindings = [];
 
             try {
-                // Fetch API for logic data
-                const apiResponse = await fetch("/api/v1/debug", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(JSON.parse(inputData))
-                });
-                const apiResult = await apiResponse.json();
-                if (apiResponse.ok && apiResult.findings) {
-                    currentFindings = apiResult.findings;
+                try {
+                    const apiResponse = await fetch("/api/v1/debug", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(JSON.parse(inputData))
+                    });
+                    const apiResult = await apiResponse.json();
+                    if (apiResponse.ok && apiResult.findings) {
+                        currentFindings = apiResult.findings;
+                    }
+                } catch(e) {
+                    console.warn("API info fetch failed, UI will still render.");
                 }
                 
-                // Fetch UI graph
                 const uiResponse = await fetch("/debug", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -254,8 +255,7 @@ DASHBOARD_HTML = """
             if(!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)){
                 source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
             }
-            source = '<?xml version="1.0" standalone="no"?>
-' + source;
+            source = '<?xml version="1.0" standalone="no"?>\r\n' + source;
             const url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(source);
             const a = document.createElement("a");
             a.href = url;
