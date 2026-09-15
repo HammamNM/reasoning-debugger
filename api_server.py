@@ -398,7 +398,7 @@ def api_debug():
             return jsonify({"error": "No JSON data provided"}), 400
 
         normalized_data = normalize_agent_trace(raw_data)
-        trace = ReasoningTrace.model_validate(normalized_data)
+        trace = ReasoningTrace.from_dict(normalized_data)
 
         debugger = ReasoningDebugger()
         findings = debugger.debug(trace)

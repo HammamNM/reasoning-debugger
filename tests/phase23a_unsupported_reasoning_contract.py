@@ -4,6 +4,7 @@ from kernel.api import (
     ReasoningTraceEvent,
 )
 from kernel.trace_graph_adapter import TraceGraphAdapter
+from kernel.unsupported_inference_detector import UnsupportedInferenceDetector
 from kernel.failure_propagation import FailurePropagationAnalyzer
 from kernel.graph import EdgeRelation
 
@@ -34,6 +35,32 @@ def build_unsupported_trace():
         )
     )
 
+
+
+def test_explicit_observation_support_is_accepted():
+    trace = ReasoningTrace.from_dict({
+        "events": [
+            {
+                "id": "e1",
+                "event_type": "OBSERVATION",
+                "content": "Data received",
+            },
+            {
+                "id": "e2",
+                "event_type": "INFERENCE",
+                "content": "The data is valid",
+                "metadata": {
+                    "support_required": True,
+                    "derived_from": ["e1"],
+                },
+            },
+        ]
+    })
+
+    graph = TraceGraphAdapter().build(trace)
+    findings = UnsupportedInferenceDetector().detect(graph)
+
+    assert findings == []
 
 def test_causal_dependency_is_explicit_and_not_temporal():
     trace = build_unsupported_trace()

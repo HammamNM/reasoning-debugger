@@ -47,6 +47,7 @@ class UnsupportedInferenceDetector:
 
                 if parent.primitive in (
                     PrimitiveType.EVIDENCE,
+                    PrimitiveType.OBSERVATION,
                     PrimitiveType.INFERENCE,
                 ):
                     supporting_parents.append(parent.id)
