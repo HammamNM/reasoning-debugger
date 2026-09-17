@@ -51,225 +51,734 @@ def normalize_agent_trace(raw_data):
     return {"events": events}
 
 DASHBOARD_HTML = """<!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reasoning Debugger</title>
-    <style>
-        :root { --primary: #2563eb; --bg: #f8fafc; --surface: #ffffff; --text: #0f172a; --border: #e2e8f0; }
-        [data-theme="dark"] { --primary: #3b82f6; --bg: #0f172a; --surface: #1e293b; --text: #f8fafc; --border: #334155; }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--text); transition: all 0.3s ease; }
-        .container { max-width: 1000px; margin: auto; position: relative; }
-        .header { text-align: center; margin-bottom: 30px; }
-        .logo { font-size: 28px; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .logo span { color: var(--text); }
-        .badges { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
-        .badge { display: inline-block; background: #e0e7ff; color: #4338ca; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; text-decoration: none; border: none; }
-        .badge-docs { background: var(--text); color: var(--bg); }
-        .theme-toggle { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; cursor: pointer; padding: 4px 12px; font-size: 16px; color: var(--text); display: flex; align-items: center; justify-content: center; height: 32px; }
-        [data-theme="dark"] .badge { background: #3730a3; color: #e0e7ff; }
-        [data-theme="dark"] .badge-docs { background: var(--primary); color: white; }
-        .input-section { background: var(--surface); padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border); margin-bottom: 25px; }
-        .file-upload { margin-bottom: 15px; font-weight: 600; }
-        textarea { width: 100%; height: 220px; padding: 15px; border: 1px solid var(--border); border-radius: 8px; font-family: 'Consolas', monospace; box-sizing: border-box; background: var(--bg); color: var(--text); resize: vertical; margin-top: 10px; }
-        textarea:focus { outline: none; border-color: var(--primary); }
-        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
-        button { flex: 1; background: var(--primary); color: white; border: none; padding: 12px; font-size: 16px; font-weight: 600; border-radius: 8px; cursor: pointer; transition: 0.2s; }
-        button:hover { opacity: 0.9; }
-        .btn-secondary { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
-        [data-theme="dark"] .btn-secondary { border-color: var(--text); color: var(--text); }
-        #graph-container { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 25px; margin-top: 20px; min-height: 100px; text-align: center; overflow: auto; }
-        #error-msg { color: #ef4444; font-weight: 600; margin-top: 15px; text-align: center; }
-        #download-btn { display: none; margin-top: 15px; width: 100%; }
-        
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
-        .modal-content { background: var(--surface); padding: 30px; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border: 1px solid var(--border); position: relative; }
-        .close-btn { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text); }
-        .modal-title { color: #ef4444; margin-top: 0; font-size: 20px; font-weight: bold; }
-        .modal-desc { margin-top: 15px; line-height: 1.5; font-size: 15px;}
-        .node { cursor: pointer; transition: filter 0.2s; }
-        .node:hover { filter: drop-shadow(0 0 5px rgba(37,99,235,0.4)); }
-    </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/viz.js/2.1.2/viz.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/viz.js/2.1.2/full.render.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reasoning Debugger</title>
+<style>
+:root{
+--bg:#f6f8fb;
+--surface:#fff;
+--surface2:#f1f4f8;
+--text:#172033;
+--muted:#667085;
+--border:#dfe4ea;
+--primary:#2563eb;
+--success:#15803d;
+--warning:#b45309;
+--danger:#dc2626;
+--shadow:0 8px 30px rgba(15,23,42,.07)
+}
+[data-theme="dark"]{
+--bg:#0b1120;
+--surface:#111827;
+--surface2:#1a2333;
+--text:#e5e7eb;
+--muted:#9ca3af;
+--border:#293548;
+--primary:#60a5fa;
+--success:#4ade80;
+--warning:#fbbf24;
+--danger:#f87171;
+--shadow:0 10px 35px rgba(0,0,0,.25)
+}
+*{box-sizing:border-box}
+body{
+margin:0;
+background:var(--bg);
+color:var(--text);
+font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif
+}
+button,textarea,input{font:inherit}
+button{cursor:pointer}
+.app{max-width:1180px;margin:auto;padding:24px}
+header{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:20px;
+margin-bottom:28px
+}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{
+width:42px;height:42px;display:grid;place-items:center;
+border-radius:12px;background:var(--primary);
+color:white;font-weight:800
+}
+h1{margin:0;font-size:22px}
+.subtitle{margin:4px 0 0;color:var(--muted);font-size:13px}
+.header-actions{display:flex;gap:8px}
+.header-actions a,.icon-btn{
+border:1px solid var(--border);
+background:var(--surface);
+color:var(--text);
+padding:9px 13px;
+border-radius:9px;
+text-decoration:none
+}
+.hero{margin-bottom:22px}
+.hero h2{margin:0 0 6px;font-size:30px}
+.hero p{margin:0;color:var(--muted)}
+.panel{
+background:var(--surface);
+border:1px solid var(--border);
+border-radius:14px;
+box-shadow:var(--shadow);
+margin-bottom:20px;
+overflow:hidden
+}
+.panel-head{
+padding:16px 18px;
+border-bottom:1px solid var(--border);
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:12px
+}
+.panel-title{
+font-size:13px;
+font-weight:800;
+letter-spacing:.06em
+}
+.panel-body{padding:18px}
+textarea{
+width:100%;
+min-height:260px;
+resize:vertical;
+border:1px solid var(--border);
+border-radius:10px;
+background:var(--surface2);
+color:var(--text);
+padding:14px;
+outline:none;
+font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+font-size:13px;
+line-height:1.55
+}
+textarea:focus{border-color:var(--primary)}
+.toolbar{
+display:flex;
+flex-wrap:wrap;
+gap:9px;
+margin-top:12px
+}
+.btn{
+border:1px solid var(--border);
+background:var(--surface);
+color:var(--text);
+padding:10px 14px;
+border-radius:9px;
+font-weight:600
+}
+.btn-primary{
+background:var(--primary);
+border-color:var(--primary);
+color:white
+}
+.btn-danger{color:var(--danger)}
+input[type=file]{display:none}
+.file-label{
+display:inline-flex;
+align-items:center;
+padding:10px 14px;
+border:1px solid var(--border);
+border-radius:9px;
+cursor:pointer;
+font-weight:600
+}
+.status{margin-top:12px;min-height:20px;color:var(--muted);font-size:13px}
+.results{display:none}
+.stats{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:12px
+}
+.stat{
+padding:18px;
+border:1px solid var(--border);
+border-radius:12px;
+background:var(--surface)
+}
+.stat-label{color:var(--muted);font-size:12px;margin-bottom:8px}
+.stat-value{font-size:25px;font-weight:800}
+.status-ok{color:var(--success)}
+.status-warning{color:var(--warning)}
+.status-error{color:var(--danger)}
+.finding{
+border:1px solid var(--border);
+border-left:4px solid var(--warning);
+border-radius:10px;
+padding:14px;
+margin-bottom:10px;
+background:var(--surface);
+cursor:pointer
+}
+.finding:hover{background:var(--surface2)}
+.finding-type{font-weight:800;margin-bottom:5px}
+.finding-meta{color:var(--muted);font-size:12px;margin-bottom:7px}
+.finding-text{font-size:13px;line-height:1.5}
+.empty{color:var(--muted);text-align:center;padding:30px 10px}
+.graph-wrap{
+overflow:auto;
+min-height:360px;
+background:var(--surface2);
+border-radius:10px;
+padding:12px
+}
+#graph{min-height:330px}
+.error-box{
+display:none;
+padding:13px;
+border:1px solid var(--danger);
+color:var(--danger);
+background:var(--surface2);
+border-radius:9px;
+margin-top:12px
+}
+.spinner{
+display:inline-block;
+width:14px;
+height:14px;
+border:2px solid rgba(255,255,255,.45);
+border-top-color:white;
+border-radius:50%;
+animation:spin .7s linear infinite;
+vertical-align:-2px
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.modal{
+display:none;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.55);
+z-index:20;
+padding:20px
+}
+.modal-card{
+max-width:620px;
+margin:8vh auto;
+background:var(--surface);
+border:1px solid var(--border);
+border-radius:14px;
+box-shadow:var(--shadow);
+padding:20px
+}
+.modal-card h3{margin-top:0}
+@media(max-width:700px){
+.app{padding:15px}
+.hero h2{font-size:24px}
+.stats{grid-template-columns:1fr}
+.header-actions a{display:none}
+}
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="logo">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
-                Reasoning<span>Debugger</span>
-            </div>
-            <div class="badges">
-                <div class="badge">Powered by nexoramed.online</div>
-                <a href="/docs" class="badge badge-docs">API Docs</a>
-                <button class="theme-toggle" onclick="window.toggleTheme()">Theme</button>
-            </div>
-        </div>
-        
-        <div class="input-section">
-            <div class="file-upload">
-                <label for="file-input">Upload Trace File: </label>
-                <input type="file" id="file-input" accept=".json,.traj,.txt" onchange="window.handleFileUpload(event)">
-            </div>
-            <textarea id="trace-input" placeholder='{"events": []}'></textarea>
-            <div class="btn-group">
-                <button onclick="window.loadSample()" class="btn-secondary">Load Sample</button>
-                <button onclick="window.processTrace()">Debug Trace</button>
-            </div>
-            <div id="error-msg"></div>
-        </div>
+<div class="app">
 
-        <div id="graph-container">Trace Graph will appear here...</div>
-        <button id="download-btn" class="btn-secondary" onclick="window.downloadSVG()">Download Graph as SVG</button>
-    </div>
+<header>
+<div class="brand">
+<div class="logo">◈</div>
+<div>
+<h1>Reasoning Debugger</h1>
+<div class="subtitle">Deterministic analysis of AI reasoning traces</div>
+</div>
+</div>
 
-    <div id="failure-modal" class="modal">
-        <div class="modal-content">
-            <button class="close-btn" onclick="window.closeModal()">X</button>
-            <div class="modal-title" id="modal-title">Failure Detected</div>
-            <div class="modal-desc" id="modal-desc">Details...</div>
-        </div>
-    </div>
+<div class="header-actions">
+<a href="/docs" target="_blank">API Docs</a>
+<button class="icon-btn" onclick="toggleTheme()" title="Toggle theme">☾</button>
+</div>
+</header>
 
-    <script>
-        window.currentFindings = [];
+<section class="hero">
+<h2>Analyze AI reasoning traces</h2>
+<p>Detect reasoning failures, inspect findings, and explore the causal reasoning graph.</p>
+</section>
 
-        window.toggleTheme = function() {
-            const html = document.documentElement;
-            if (html.getAttribute('data-theme') === 'light') {
-                html.setAttribute('data-theme', 'dark');
-            } else {
-                html.setAttribute('data-theme', 'light');
-            }
-        };
+<section class="panel">
+<div class="panel-head">
+<div class="panel-title">INPUT TRACE</div>
+</div>
+<div class="panel-body">
+<textarea id="traceInput" placeholder="Paste a JSON reasoning trace here..."></textarea>
 
-        window.loadSample = function() {
-            const sampleData = {
-                "steps": [
-                    { "tool": "Search", "tool_input": "error code 500" },
-                    { "observation": "No results found" },
-                    { "tool": "Search", "tool_input": "error code 500" },
-                    { "observation": "No results found" },
-                    { "tool": "Search", "tool_input": "error code 500" }
-                ]
-            };
-            document.getElementById('trace-input').value = JSON.stringify(sampleData, null, 4);
-        };
+<div class="toolbar">
+<label class="file-label" for="fileInput">Upload JSON</label>
+<input id="fileInput" type="file" accept=".json,application/json" onchange="handleFileUpload(event)">
 
-        window.handleFileUpload = function(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) { document.getElementById("trace-input").value = e.target.result; };
-            reader.readAsText(file);
-        };
+<button class="btn" onclick="loadSample()">Load Sample</button>
+<button class="btn btn-danger" onclick="clearTrace()">Clear</button>
+<button class="btn btn-primary" id="analyzeBtn" onclick="processTrace()">Analyze Trace</button>
+</div>
 
-        window.processTrace = async function() {
-            const inputData = document.getElementById("trace-input").value;
-            const errorMsg = document.getElementById("error-msg");
-            const graphContainer = document.getElementById("graph-container");
-            const downloadBtn = document.getElementById("download-btn");
-            
-            if (!inputData.trim()) { errorMsg.innerText = "Please provide trace data."; return; }
-            errorMsg.innerText = "";
-            graphContainer.innerHTML = "Processing...";
-            downloadBtn.style.display = 'none';
-            window.currentFindings = [];
+<div id="status" class="status"></div>
+<div id="errorBox" class="error-box"></div>
+</div>
+</section>
 
-            let parsedData;
-            try {
-                parsedData = JSON.parse(inputData);
-            } catch(e) {
-                errorMsg.innerText = "Invalid JSON format: " + e.message;
-                graphContainer.innerHTML = "";
-                return;
-            }
+<section id="results" class="results">
 
-            try {
-                try {
-                    const apiResponse = await fetch("/api/v1/debug", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(parsedData)
-                    });
-                    const apiResult = await apiResponse.json();
-                    if (apiResponse.ok && apiResult.findings) {
-                        window.currentFindings = apiResult.findings;
-                    }
-                } catch(e) {
-                    console.log("API info fetch failed, continuing to graph render.");
-                }
-                
-                const uiResponse = await fetch("/debug", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(parsedData)
-                });
-                
-                const result = await uiResponse.json();
-                if (!uiResponse.ok) throw new Error(result.error || "Server processing error");
+<section class="panel">
+<div class="panel-head">
+<div class="panel-title">ANALYSIS</div>
+</div>
+<div class="panel-body">
+<div class="stats">
 
-                let viz = new Viz();
-                viz.renderSVGElement(result.dot_graph).then(function(element) {
-                    graphContainer.innerHTML = "";
-                    element.style.width = "100%";
-                    element.style.height = "auto";
-                    graphContainer.appendChild(element);
-                    downloadBtn.style.display = 'block';
-                    window.makeNodesInteractive(element);
-                }).catch(error => { errorMsg.innerText = "Graph rendering failed."; });
-            } catch (err) {
-                errorMsg.innerText = "Error: " + err.message;
-                graphContainer.innerHTML = "";
-            }
-        };
+<div class="stat">
+<div class="stat-label">EVENTS</div>
+<div class="stat-value" id="eventCount">—</div>
+</div>
 
-        window.makeNodesInteractive = function(svgElement) {
-            const nodes = svgElement.querySelectorAll('.node');
-            nodes.forEach(node => {
-                node.addEventListener('click', () => {
-                    const titleEl = node.querySelector('title');
-                    if (!titleEl) return;
-                    const nodeId = titleEl.textContent.trim();
-                    const finding = window.currentFindings.find(f => f.event_id === nodeId);
-                    
-                    if (finding) {
-                        document.getElementById('modal-title').innerText = "Failure: " + finding.failure_type.replace(/_/g, ' ');
-                        document.getElementById('modal-desc').innerText = finding.explanation;
-                        document.getElementById('failure-modal').style.display = 'flex';
-                    }
-                });
-            });
-        };
+<div class="stat">
+<div class="stat-label">FINDINGS</div>
+<div class="stat-value" id="findingCount">—</div>
+</div>
 
-        window.closeModal = function() {
-            document.getElementById('failure-modal').style.display = 'none';
-        };
+<div class="stat">
+<div class="stat-label">STATUS</div>
+<div class="stat-value" id="analysisStatus">—</div>
+</div>
 
-        window.downloadSVG = function() {
-            const svg = document.querySelector("#graph-container svg");
-            if (!svg) return;
-            const serializer = new XMLSerializer();
-            let source = serializer.serializeToString(svg);
-            if (source.indexOf('xmlns="http://www.w3.org/2000/svg"') === -1) {
-                source = source.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
-            }
-            source = '<?xml version="1.0" standalone="no"?>\\n' + source;
-            const blob = new Blob([source], {type: "image/svg+xml;charset=utf-8"});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "reasoning_trace.svg";
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        };
-    </script>
+</div>
+</div>
+</section>
+
+<section class="panel">
+<div class="panel-head">
+<div class="panel-title">FINDINGS</div>
+</div>
+<div class="panel-body">
+<div id="findingsList"></div>
+</div>
+</section>
+
+<section class="panel">
+<div class="panel-head">
+<div class="panel-title">REASONING GRAPH</div>
+<button class="btn" onclick="downloadSVG()">Download SVG</button>
+</div>
+<div class="panel-body">
+<div class="graph-wrap">
+<div id="graph"></div>
+</div>
+</div>
+</section>
+
+</section>
+
+</div>
+
+<div id="findingModal" class="modal" onclick="closeModal(event)">
+<div class="modal-card">
+<h3 id="modalTitle">Finding</h3>
+<div id="modalBody"></div>
+<div class="toolbar">
+<button class="btn" onclick="document.getElementById('findingModal').style.display='none'">Close</button>
+</div>
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/viz.js@2.1.2/viz.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/viz.js@2.1.2/full.render.js"></script>
+<script>
+window.currentFindings = [];
+window.currentSvg = null;
+window.currentTrace = null;
+
+function toggleTheme(){
+  const root=document.documentElement;
+  const dark=root.getAttribute("data-theme")==="dark";
+  root.setAttribute("data-theme",dark?"light":"dark");
+  localStorage.setItem("reasoning-debugger-theme",dark?"light":"dark");
+}
+
+(function(){
+  if(localStorage.getItem("reasoning-debugger-theme")==="dark"){
+    document.documentElement.setAttribute("data-theme","dark");
+  }
+})();
+
+function setStatus(text){
+  document.getElementById("status").textContent=text||"";
+}
+
+function showError(message){
+  const box=document.getElementById("errorBox");
+  box.textContent=message||"An unexpected error occurred.";
+  box.style.display="block";
+}
+
+function clearError(){
+  document.getElementById("errorBox").style.display="none";
+}
+
+function setProcessing(active){
+  const button=document.getElementById("analyzeBtn");
+  button.disabled=active;
+
+  if(active){
+    button.innerHTML='<span class="spinner"></span> Analyzing...';
+  }else{
+    button.textContent="Analyze Trace";
+  }
+}
+
+function clearTrace(){
+  document.getElementById("traceInput").value="";
+  document.getElementById("results").style.display="none";
+  document.getElementById("graph").innerHTML="";
+  document.getElementById("findingsList").innerHTML="";
+  clearError();
+  setStatus("");
+  window.currentFindings=[];
+  window.currentSvg=null;
+  window.currentTrace=null;
+}
+
+function loadSample(){
+  const sample={
+    steps:[
+      {tool:"Search",tool_input:"error code 500"},
+      {observation:"No results found"},
+      {tool:"Search",tool_input:"error code 500"},
+      {observation:"No results found"},
+      {tool:"Search",tool_input:"error code 500"}
+    ]
+  };
+
+  document.getElementById("traceInput").value=JSON.stringify(sample,null,2);
+  clearError();
+  setStatus("Sample trace loaded.");
+}
+
+function handleFileUpload(event){
+  const file=event.target.files&&event.target.files[0];
+  if(!file)return;
+
+  const reader=new FileReader();
+
+  reader.onload=function(e){
+    document.getElementById("traceInput").value=e.target.result;
+    clearError();
+    setStatus("Trace loaded from "+file.name);
+  };
+
+  reader.onerror=function(){
+    showError("Could not read the selected file.");
+  };
+
+  reader.readAsText(file);
+}
+
+function countTraceEvents(data){
+  if(Array.isArray(data))return data.length;
+  if(!data||typeof data!=="object")return 0;
+
+  for(const key of ["events","runs","trajectory","steps"]){
+    if(Array.isArray(data[key]))return data[key].length;
+  }
+
+  for(const value of Object.values(data)){
+    if(Array.isArray(value))return value.length;
+  }
+
+  return 0;
+}
+
+function escapeHtml(value){
+  return String(value??"")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+}
+</script>
+<script>
+async function processTrace(){
+  clearError();
+  const input = document.getElementById("traceInput");
+  const raw = input ? input.value.trim() : "";
+
+  if(!raw){
+    showError("Please provide a reasoning trace before analyzing.");
+    return;
+  }
+
+  let parsedData;
+  try{
+    parsedData = JSON.parse(raw);
+  }catch(err){
+    showError("Invalid JSON. Please check the trace format and try again.");
+    return;
+  }
+
+  setProcessing(true);
+  window.currentFindings = [];
+  window.currentSvg = null;
+  window.currentTrace = parsedData;
+
+  try{
+    const apiResponse = await fetch("/api/v1/debug", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(parsedData)
+    });
+
+    let apiResult = {};
+    try{
+      apiResult = await apiResponse.json();
+    }catch(_){}
+
+    if(!apiResponse.ok){
+      throw new Error(apiResult.error || "Debugger API returned an error.");
+    }
+
+    if(Array.isArray(apiResult.findings)){
+      window.currentFindings = apiResult.findings;
+    }
+
+    const uiResponse = await fetch("/debug", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(parsedData)
+    });
+
+    let result = {};
+    try{
+      result = await uiResponse.json();
+    }catch(_){}
+
+    if(!uiResponse.ok){
+      throw new Error(result.error || "Server processing error.");
+    }
+
+    if(!result.dot_graph){
+      throw new Error("The debugger returned no graph.");
+    }
+
+    renderFindings();
+    updateStats(parsedData, window.currentFindings);
+
+    const graphContainer = document.getElementById("graph");
+    if(!graphContainer){
+      throw new Error("Graph container not found.");
+    }
+
+    graphContainer.innerHTML = "";
+
+    const viz = new Viz();
+
+    const svgElement = await viz.renderSVGElement(result.dot_graph);
+    svgElement.removeAttribute("width");
+    svgElement.removeAttribute("height");
+    svgElement.style.width = "100%";
+    svgElement.style.height = "auto";
+
+    graphContainer.appendChild(svgElement);
+    window.currentSvg = svgElement.outerHTML;
+
+    const nodes = svgElement.querySelectorAll(".node");
+
+    nodes.forEach(node => {
+      node.style.cursor = "pointer";
+
+      node.addEventListener("click", () => {
+        const titleEl = node.querySelector("title");
+        if(!titleEl) return;
+
+        const nodeId = titleEl.textContent.trim();
+        const finding = window.currentFindings.find(
+          f => String(f.event_id) === String(nodeId)
+        );
+
+        if(finding){
+          showFinding(finding);
+        }
+      });
+    });
+
+    document.getElementById("results").style.display = "block";
+
+    const findingCount = window.currentFindings.length;
+    setStatus(
+      findingCount
+        ? `${findingCount} finding${findingCount === 1 ? "" : "s"} detected`
+        : "No structural findings detected",
+      findingCount ? "warning" : "success"
+    );
+
+  }catch(err){
+    console.error(err);
+    showError(err.message || "Unable to analyze this trace.");
+    const graphContainer = document.getElementById("graph");
+    if(graphContainer) graphContainer.innerHTML = "";
+    document.getElementById("results").style.display = "none";
+  }finally{
+    setProcessing(false);
+  }
+}
+
+function updateStats(trace, findings){
+  const events = countTraceEvents(trace);
+
+  const eventsEl = document.getElementById("eventCount");
+  const findingsEl = document.getElementById("findingCount");
+  const statusEl = document.getElementById("traceStatus");
+
+  if(eventsEl) eventsEl.textContent = String(events);
+  if(findingsEl) findingsEl.textContent = String(findings.length);
+
+  if(statusEl){
+    statusEl.textContent = findings.length ? "Review required" : "Clean";
+    statusEl.className = findings.length
+      ? "stat-value status-warning"
+      : "stat-value status-success";
+  }
+}
+
+function renderFindings(){
+  const container = document.getElementById("findingsList");
+  if(!container) return;
+
+  container.innerHTML = "";
+
+  if(!window.currentFindings.length){
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">✓</div>
+        <h3>No findings detected</h3>
+        <p>The trace was processed without detected structural or cognitive findings.</p>
+      </div>`;
+    return;
+  }
+
+  window.currentFindings.forEach((finding, index) => {
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "finding-card";
+
+    const type = escapeHtml(
+      finding.type || finding.finding_type || "Finding"
+    );
+
+    const eventId = escapeHtml(
+      finding.event_id || finding.node_id || "Unknown event"
+    );
+
+    const explanation = escapeHtml(
+      finding.explanation ||
+      finding.message ||
+      finding.description ||
+      "No explanation provided."
+    );
+
+    card.innerHTML = `
+      <div class="finding-top">
+        <span class="finding-type">${type}</span>
+        <span class="finding-event">${eventId}</span>
+      </div>
+      <div class="finding-title">${type}</div>
+      <div class="finding-explanation">${explanation}</div>
+      <div class="finding-action">View details →</div>
+    `;
+
+    card.addEventListener("click", () => showFinding(finding));
+    container.appendChild(card);
+  });
+}
+
+function showFinding(finding){
+  const modal = document.getElementById("findingModal");
+  if(!modal) return;
+
+  const type =
+    finding.type ||
+    finding.finding_type ||
+    "Finding";
+
+  const eventId =
+    finding.event_id ||
+    finding.node_id ||
+    "Unknown";
+
+  const explanation =
+    finding.explanation ||
+    finding.message ||
+    finding.description ||
+    "No explanation provided.";
+
+  const title = modal.querySelector("[data-finding-title]");
+  const body = modal.querySelector("[data-finding-body]");
+
+  if(title){
+    title.textContent = type;
+  }
+
+  if(body){
+    body.innerHTML = `
+      <div class="detail-row">
+        <span>Type</span>
+        <strong>${escapeHtml(type)}</strong>
+      </div>
+      <div class="detail-row">
+        <span>Event</span>
+        <strong>${escapeHtml(eventId)}</strong>
+      </div>
+      <div class="detail-description">
+        ${escapeHtml(explanation)}
+      </div>
+    `;
+  }
+
+  modal.classList.add("open");
+}
+
+function closeModal(event){
+  const modal = document.getElementById("findingModal");
+  if(!modal) return;
+
+  if(!event || event.target === modal){
+    modal.classList.remove("open");
+  }
+}
+
+document.addEventListener("keydown", event => {
+  if(event.key === "Escape"){
+    const modal = document.getElementById("findingModal");
+    if(modal) modal.classList.remove("open");
+  }
+});
+
+function downloadSVG(){
+  if(!window.currentSvg){
+    showError("Analyze a trace first to generate an SVG.");
+    return;
+  }
+
+  const blob = new Blob(
+    [window.currentSvg],
+    {type:"image/svg+xml;charset=utf-8"}
+  );
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = "reasoning_trace.svg";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  URL.revokeObjectURL(url);
+}
+</script>
+
 </body>
-</html>"""
+</html>
+"""
 
 API_DOCS_HTML = """<!DOCTYPE html>
 <html lang="en">
