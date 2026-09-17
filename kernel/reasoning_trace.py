@@ -36,7 +36,7 @@ class ReasoningTrace:
     def from_dict(cls, data: Dict[str, Any]) -> "ReasoningTrace":
         events = []
         # 1. التسامح مع ملفات LangChain و SWE-agent
-        raw_events = data.get("events") or data.get("runs") or data.get("trajectory") or []
+        raw_events = data.get("events") or data.get("runs") or data.get("trajectory") or data.get("steps") or []
         
         for i, e_data in enumerate(raw_events):
             # 2. قيم افتراضية ذكية للحقول الأساسية لمنع الانهيار
@@ -57,7 +57,7 @@ class ReasoningTrace:
             if "derived_from" not in metadata:
                 metadata["derived_from"] = []
             if "support_required" not in metadata:
-                metadata["support_required"] = (event_type == "INFERENCE")
+                metadata["support_required"] = False
 
             events.append(ReasoningTraceEvent(
                 id=event_id,

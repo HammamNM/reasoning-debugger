@@ -24,6 +24,7 @@ class PrimitiveType(Enum):
     DECISION = "DECISION"
 
     OUTCOME = "OUTCOME"
+    GENERIC_EVENT = "GENERIC_EVENT"
 
 
 @dataclass

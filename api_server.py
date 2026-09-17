@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from kernel.api import ReasoningDebugger, ReasoningTrace, InvalidTraceSchemaError, export_trace_to_dot
+from kernel.api import ReasoningDebugger, ReasoningTrace, InvalidTraceSchemaError, export_trace_to_dot, export_compact_trace_to_dot
 import json
 
 app = Flask(__name__)
@@ -381,7 +381,12 @@ def debug_trace():
         }
 
         if findings:
-            response_data["dot_graph"] = export_trace_to_dot(trace, findings)
+            renderer = (
+                export_compact_trace_to_dot
+                if len(trace.events) > 500
+                else export_trace_to_dot
+            )
+            response_data["dot_graph"] = renderer(trace, findings)
 
         return jsonify(response_data), 200
 
@@ -398,6 +403,13 @@ def api_debug():
             return jsonify({"error": "No JSON data provided"}), 400
 
         normalized_data = normalize_agent_trace(raw_data)
+
+        if 'events' not in normalized_data or not normalized_data['events']:
+            return jsonify({
+                "status": "error",
+                "message": "Adapter could not extract valid reasoning events from this trace format."
+            }), 400
+
         trace = ReasoningTrace.from_dict(normalized_data)
 
         debugger = ReasoningDebugger()
@@ -419,6 +431,11 @@ def api_debug():
             "findings": results
         }), 200
 
+    except InvalidTraceSchemaError as e:
+        return jsonify({
+            "status": "error",
+            "message": f"Schema Error: {str(e)}"
+        }), 400
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 

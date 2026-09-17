@@ -37,7 +37,7 @@ class TraceGraphAdapter:
             primitive = self.EVENT_TYPE_MAP.get(event_type) or self.EVENT_TYPE_MAP.get(event_type.lower())
 
             if primitive is None:
-                raise ValueError(f"Unknown trace event_type: {event.event_type}")
+                primitive = PrimitiveType.GENERIC_EVENT
 
             unit = ReasoningUnit(
                 id=event.id,
