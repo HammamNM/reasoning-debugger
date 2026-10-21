@@ -1,9 +1,0 @@
-digraph ReasoningTrace {
-  rankdir=TB;
-  node [shape=box, style=filled, fontname=Arial];
-  "e1" [label="[INVESTIGATION] e1
-query db...", fillcolor="lightblue"];
-  "e2" [label="[INFERENCE] e2
-user exists...", fillcolor="lightcoral"];
-  "e1" -> "e2" [style=dotted, color=gray];
-}

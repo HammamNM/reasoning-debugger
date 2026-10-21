@@ -4,3 +4,7 @@ __pycache__/
 .pytest_cache/
 .venv/
 venv/
+
+archive_scripts/
+__pycache__/
+*.pyc
