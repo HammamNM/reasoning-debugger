@@ -1,0 +1,26 @@
+{
+  "events": [
+    {
+      "id": "e1",
+      "event_type": "INVESTIGATION",
+      "content": "Read auth.py searching for login logic",
+      "metadata": {}
+    },
+    {
+      "id": "e2",
+      "event_type": "INFERENCE",
+      "content": "Assume password hashing is MD5 without checking imports",
+      "metadata": {
+        "support_required": true
+      }
+    },
+    {
+      "id": "e3",
+      "event_type": "INFERENCE",
+      "content": "Patch login function using hashlib.md5",
+      "metadata": {
+        "support_required": true
+      }
+    }
+  ]
+}

@@ -71,15 +71,16 @@ def test_adapter_rejects_invalid_trace():
         TraceGraphAdapter().build(object())
 
 
-def test_adapter_rejects_unknown_event_type():
+def test_adapter_maps_unknown_event_type_to_generic_event():
     trace = ReasoningTrace(
         events=(
             event("event-1", "Unknown.", "something_unknown"),
         )
     )
 
-    with pytest.raises(ValueError):
-        TraceGraphAdapter().build(trace)
+    graph = TraceGraphAdapter().build(trace)
+    assert graph.nodes[0].primitive == PrimitiveType.GENERIC_EVENT
+    assert graph.nodes[0].provenance.event_type == "something_unknown"
 
 
 def test_adapter_does_not_modify_trace():

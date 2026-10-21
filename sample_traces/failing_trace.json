@@ -1,0 +1,18 @@
+{
+  "events": [
+    {
+      "id": "e1",
+      "event_type": "INVESTIGATION",
+      "content": "query db",
+      "metadata": {}
+    },
+    {
+      "id": "e2",
+      "event_type": "INFERENCE",
+      "content": "user exists",
+      "metadata": {
+        "support_required": true
+      }
+    }
+  ]
+}

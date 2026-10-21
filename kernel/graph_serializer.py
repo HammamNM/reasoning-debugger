@@ -34,9 +34,7 @@ class GraphSerializer:
 
                     "target": edge.target,
 
-                    "relation": edge.relation,
-
-                    "metadata": edge.metadata
+                    "relation": edge.relation.value
 
                 }
 

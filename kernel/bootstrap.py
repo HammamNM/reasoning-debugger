@@ -9,10 +9,10 @@ from kernel.adapters.session_adapter import (
 from kernel.evidence_engine import (
     EvidenceEngine
 )
-
 from simulation.investigation_engine import (
     InvestigationEngine
 )
+
 
 from kernel.adapters.decision_adapter import (
     DecisionEngineAdapter
@@ -129,6 +129,7 @@ class KernelBootstrap:
         # -------------------------------------------------
         # Register engines
         # -------------------------------------------------
+
 
         runtime.register_engine(
             InvestigationEngine(),

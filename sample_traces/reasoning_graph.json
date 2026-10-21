@@ -1,0 +1,71 @@
+{
+    "nodes": [
+        {
+            "id": "1",
+            "primitive": "PrimitiveType.OBSERVATION",
+            "content": "{'action': 'ASK_CHEST_PAIN'}"
+        },
+        {
+            "id": "2",
+            "primitive": "PrimitiveType.INVESTIGATION",
+            "content": "{'action': 'ORDER_ECG'}"
+        },
+        {
+            "id": "3",
+            "primitive": "PrimitiveType.INVESTIGATION",
+            "content": "{'action': 'ORDER_ECG', 'investigation_id': 'ECG', 'result': {'name': 'Electrocardiogram', 'result': {'rhythm': 'sinus', 'st_elevation': False, 'st_depression': True, 't_wave_inversion': True}}}"
+        },
+        {
+            "id": "4",
+            "primitive": "PrimitiveType.INVESTIGATION",
+            "content": "{'action': 'ORDER_TROPONIN'}"
+        },
+        {
+            "id": "5",
+            "primitive": "PrimitiveType.INVESTIGATION",
+            "content": "{'action': 'ORDER_TROPONIN', 'investigation_id': 'TROPONIN', 'result': {'name': 'High-sensitivity troponin', 'result': {'value': 186, 'unit': 'ng/L', 'reference': '< 14 ng/L', 'interpretation': 'elevated'}}}"
+        },
+        {
+            "id": "6",
+            "primitive": "PrimitiveType.DECISION",
+            "content": "{'action': 'MAKE_DIAGNOSIS', 'profile': DecisionProfile(action='MAKE_DIAGNOSIS', assessments=[DecisionAssessment(dimension='Timing', score=8, explanation='Decision timing was acceptable'), DecisionAssessment(dimension='Safety', score=8, explanation='No major safety issue detected'), DecisionAssessment(dimension='Efficiency', score=8, explanation='Resource utilization appears acceptable')], total_score=8.0)}"
+        },
+        {
+            "id": "7",
+            "primitive": "PrimitiveType.OUTCOME",
+            "content": "{'action': 'MAKE_DIAGNOSIS', 'outcome': PatientOutcome(status='STABLE', severity=0, description='Initial patient state')}"
+        }
+    ],
+    "edges": [
+        {
+            "source": "1",
+            "target": "2",
+            "relation": "SEQUENCE"
+        },
+        {
+            "source": "2",
+            "target": "3",
+            "relation": "SEQUENCE"
+        },
+        {
+            "source": "3",
+            "target": "4",
+            "relation": "SEQUENCE"
+        },
+        {
+            "source": "4",
+            "target": "5",
+            "relation": "SEQUENCE"
+        },
+        {
+            "source": "5",
+            "target": "6",
+            "relation": "SEQUENCE"
+        },
+        {
+            "source": "6",
+            "target": "7",
+            "relation": "SEQUENCE"
+        }
+    ]
+}

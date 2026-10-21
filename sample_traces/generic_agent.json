@@ -1,0 +1,6 @@
+[
+  {"thought": "I need to check if the user is in the database"},
+  {"action": "query_db(user='admin')"},
+  {"observation": "null"},
+  {"thought": "The user exists, I will proceed to update password", "metadata": {"support_required": true}}
+]

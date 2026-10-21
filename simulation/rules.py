@@ -1,8 +1,6 @@
 from dataclasses import dataclass
 
-from kernel.events import (
-    create_event
-)
+from kernel.events import create_event
 
 
 @dataclass

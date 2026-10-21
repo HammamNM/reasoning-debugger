@@ -8,7 +8,7 @@ from analytics.analytics_engine import (
 from backend.session_manager import SessionManager
 from simulation.orchestrator import SimulationOrchestrator
 
-from kernel.runtime import KernelRuntime
+from kernel.bootstrap import KernelBootstrap
 
 from analytics.analytics_engine import AnalyticsEngine
 
@@ -21,11 +21,13 @@ def main():
     session = session_manager.create_session(
         student_id="student_001",
         scenario_id="NSTEMI",
-        case_path="scenarios/nstemi_case.json"
+        case_path="scenarios/nstemi_basic.json"
     )
 
 
-    runtime = KernelRuntime(
+    bootstrap = KernelBootstrap()
+
+    runtime = bootstrap.create_runtime(
         session
     )
 
@@ -57,7 +59,7 @@ def main():
 
     graph_storage.save(
 
-        orchestrator.kernel_runtime
+        orchestrator.runtime
         .graph_builder
         .graph,
 
@@ -68,29 +70,17 @@ def main():
     
     analytics = AnalyticsEngine()
 
-    report = analytics.analyze(
-    session
+    report = analytics.generate_report(
+        session=orchestrator.runtime.session,
+        reasoning_graph=(
+            orchestrator.runtime
+            .graph_builder
+            .graph
+        )
     )
 
     print("\nREPORT")
     print(report)
-
-    report = analytics.generate_report(
-
-        session=session,
-
-        event_bridge=(
-            runtime.event_bridge
-        ),
-
-        reasoning_graph=(
-            runtime
-            .reasoning_builder
-            .graph
-        )
-
-    )
-
 
     print(
         "\n=============================="
@@ -128,7 +118,7 @@ def main():
     )
 
     print(
-        report["average_score"]
+        report["performance"]["average_score"]
     )
 
 
@@ -137,7 +127,7 @@ def main():
     )
 
     print(
-        report["dimension_scores"]
+        report["performance"]["dimension_scores"]
     )
 
 
@@ -146,7 +136,7 @@ def main():
     )
 
     print(
-        report["progress_trend"]
+        report["performance"]["progress_trend"]
     )
 
 

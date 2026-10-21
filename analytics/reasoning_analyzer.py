@@ -1,6 +1,4 @@
-from kernel.models import (
-    PrimitiveType
-)
+from kernel.models import PrimitiveType
 
 
 class ReasoningAnalyzer:

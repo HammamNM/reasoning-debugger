@@ -1,6 +1,4 @@
-from kernel.events import (
-    ReasoningEvent
-)
+from kernel.events import ReasoningEvent
 
 
 class InvestigationEngine:

@@ -17,3 +17,28 @@ def test_trace_determinism():
     json2 = json.dumps(trace.to_dict(), sort_keys=True)
     
     assert json1 == json2, "Serialization is not deterministic!"
+
+from kernel.graph import EdgeRelation, ReasoningGraph
+from kernel.graph_serializer import GraphSerializer
+
+
+def test_graph_serializer_matches_current_edge_contract():
+    graph = ReasoningGraph()
+
+    graph.add_edge(
+        source="node_1",
+        target="node_2",
+        relation=EdgeRelation.SUPPORTS,
+    )
+
+    data = GraphSerializer().export(graph)
+
+    assert data["edges"] == [
+        {
+            "source": "node_1",
+            "target": "node_2",
+            "relation": "SUPPORTS",
+        }
+    ]
+
+    json.dumps(data, default=lambda value: value.value)

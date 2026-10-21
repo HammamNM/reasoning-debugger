@@ -29,7 +29,7 @@ def test_adapter_maps_real_kernel_event_types():
     ]
 
 
-def test_adapter_rejects_unmapped_kernel_event_type():
+def test_adapter_maps_unmapped_kernel_event_type_to_generic_event():
     trace = ReasoningTrace(
         events=(
             ReasoningTraceEvent(
@@ -40,8 +40,9 @@ def test_adapter_rejects_unmapped_kernel_event_type():
         )
     )
 
-    with pytest.raises(ValueError):
-        TraceGraphAdapter().build(trace)
+    graph = TraceGraphAdapter().build(trace)
+    assert graph.nodes[0].primitive == PrimitiveType.GENERIC_EVENT
+    assert graph.nodes[0].provenance.event_type == "ACTION"
 
 
 def test_adapter_preserves_real_kernel_event_order():

@@ -184,7 +184,7 @@ def test_debugger_propagates_real_kernel_graph_failure():
     assert result[0].affected_event_ids == ()
 
 
-def test_debugger_does_not_accept_unknown_kernel_event():
+def test_debugger_accepts_unknown_kernel_event_as_generic_event():
     trace = make_trace(
         ReasoningTraceEvent(
             "event-1",
@@ -193,5 +193,5 @@ def test_debugger_does_not_accept_unknown_kernel_event():
         )
     )
 
-    with pytest.raises(ValueError):
-        ReasoningDebugger().debug(trace)
+    result = ReasoningDebugger().debug(trace)
+    assert result == []

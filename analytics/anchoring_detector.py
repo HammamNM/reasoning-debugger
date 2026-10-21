@@ -1,151 +1,50 @@
-from kernel.query_engine import (
-    QueryEngine
-)
-
-from kernel.models import (
-    PrimitiveType
-)
-
-
-
 class AnchoringDetector:
 
-
-    def detect(
-        self,
-        reasoning_graph
-    ):
-
-        query = QueryEngine(
-            reasoning_graph
-        )
-
+    def detect(self, reasoning_state):
         detected = []
 
-        hypotheses = query.nodes_by_primitive(
-            PrimitiveType.HYPOTHESIS
+        hypotheses = getattr(
+            reasoning_state,
+            "hypotheses",
+            [],
         )
 
-
         for hypothesis in hypotheses:
-
-
-            evidence = self.get_contradicting_evidence(
-
-                query,
-
-                hypothesis.id
-
-            )
-
+            evidence = self.get_contradicting_evidence(hypothesis)
 
             if len(evidence) == 0:
-
                 continue
 
-
             detected.append({
-
-                "pattern_id":
-                    "CP-201",
-
-                "name":
-                    "Anchoring Bias",
-
-                "hypothesis":
-                    hypothesis.content,
-
-                "reason":
-                    "Hypothesis remained active despite contradictory evidence",
-
-                "severity":
-                    self.calculate_severity(
-                        evidence
-                    ),
-
-                "evidence":
-                    evidence
-
+                "pattern_id": "CP-201",
+                "name": "Anchoring Bias",
+                "hypothesis": hypothesis.name,
+                "reason": (
+                    "Hypothesis remained active despite "
+                    "contradictory evidence"
+                ),
+                "severity": self.calculate_severity(evidence),
+                "evidence": evidence,
             })
-
 
         return detected
 
-
-
-    def get_contradicting_evidence(
-        self,
-        query,
-        hypothesis_id
-    ):
-
-        evidence = []
-
-
-        contradictions = query.edges_by_relation(
-            "CONTRADICTS"
-        )
-
-
-        for edge in contradictions:
-
-
-            if edge.target != hypothesis_id:
-
-                continue
-
-
-            source_node = query.node_by_id(
-                edge.source
+    def get_contradicting_evidence(self, hypothesis):
+        return list(
+            getattr(
+                hypothesis,
+                "contradicting_evidence",
+                [],
             )
-
-
-            evidence.append({
-
-                "relation":
-                    edge.relation,
-
-                "source": {
-
-                    "id":
-                        source_node.id,
-
-                    "primitive":
-                        source_node.primitive.value,
-
-                    "content":
-                        source_node.content
-
-                },
-
-                "target":
-                    hypothesis_id
-
-            })
-
-
-        return evidence
-
-
-
-    def calculate_severity(
-        self,
-        evidence
-    ):
-
-        count = len(
-            evidence
         )
 
+    def calculate_severity(self, evidence):
+        count = len(evidence)
 
         if count >= 3:
-
             return "HIGH"
 
-
         if count >= 2:
-
             return "MEDIUM"
-
 
         return "LOW"

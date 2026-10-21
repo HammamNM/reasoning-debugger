@@ -65,9 +65,8 @@ class AnalyticsEngine:
             cognitive_data = (
 
                 self.cognitive_pipeline.analyze(
-
-                    reasoning_graph
-
+                    reasoning_graph,
+                    session.reasoning_state
                 )
 
             )
