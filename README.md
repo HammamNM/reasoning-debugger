@@ -30,3 +30,16 @@ The current test suite passes successfully, enforcing the architectural contract
 
 ## Documentation
 Please refer to ARCHITECTURE.md for a deep dive into the separation of concerns, the reasoning graph, and the first-failure localization pipeline.
+
+## Architecture (High-Level)
+```mermaid
+graph TD
+    A[Agent Trace JSON] --> B(Trace Parser/Adapter)
+    B --> C{Reasoning Kernel}
+    C --> D[Cognitive Pattern Pipeline]
+    C --> E[Anchoring Detector]
+    D --> F[Findings & Evidence]
+    E --> F
+    F --> G(Graph Serializer)
+    G --> H[Output Graph / Debugger UI]
+```
