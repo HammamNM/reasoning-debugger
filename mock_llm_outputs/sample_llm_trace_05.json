@@ -1,0 +1,12 @@
+[
+  { 
+    "id": "llm_event_1", 
+    "event_type": "INFERENCE", 
+    "content": "Patient has NSTEMI",
+    "metadata": { 
+      "inference_code": "NSTEMI", 
+      "claim_status": "DEFINITIVE", 
+      "support_required": true 
+    } 
+  }
+]
