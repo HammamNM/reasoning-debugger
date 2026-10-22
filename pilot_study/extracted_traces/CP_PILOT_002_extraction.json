@@ -1,0 +1,10 @@
+{
+  "events": [
+    {"event_id": "E1", "event_type": "ACTION", "action_code": "PERFORM_ECG", "source_span": "The initial ECG was performed", "assertion_status": "REPORTED_PERFORMED"},
+    {"event_id": "E2", "event_type": "ACTION", "action_code": "ORDER_TROPONIN", "source_span": "A high-sensitivity troponin test has been ordered", "assertion_status": "REPORTED_PERFORMED"},
+    {"event_id": "E3", "event_type": "OBSERVATION", "observation_code": "TROPONIN_RESULT_PENDING", "source_span": "the result is still pending", "assertion_status": "OBSERVED_RESULT"},
+    {"event_id": "E4", "event_type": "INFERENCE", "inference_code": "GI_ISSUE", "source_span": "the symptoms are most likely gastrointestinal", "assertion_status": "SUSPECTED"},
+    {"event_id": "E5", "event_type": "ACTION", "action_code": "DISCHARGE", "source_span": "The patient can be discharged now", "assertion_status": "PROPOSED"}
+  ],
+  "relations": []
+}

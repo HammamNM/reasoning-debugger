@@ -1,0 +1,7 @@
+{
+  "events": [
+    {"event_id": "E1", "event_type": "ACTION", "action_code": "ORDER_ECG", "source_span": "An immediate 12-lead ECG should be obtained", "assertion_status": "PROPOSED"},
+    {"event_id": "E2", "event_type": "ACTION", "action_code": "ORDER_TROPONIN", "source_span": "cardiac troponin testing should be initiated", "assertion_status": "PROPOSED"},
+    {"event_id": "E3", "event_type": "INFERENCE", "inference_code": "ACS", "source_span": "Acute coronary syndrome remains a suspected diagnosis", "assertion_status": "SUSPECTED"}
+  ], "relations": []
+}

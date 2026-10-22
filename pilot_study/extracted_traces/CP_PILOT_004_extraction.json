@@ -1,0 +1,6 @@
+{
+  "events": [
+    {"event_id": "E1", "event_type": "INFERENCE", "inference_code": "AORTIC_DISSECTION", "source_span": "raise strong concern for acute aortic dissection", "assertion_status": "SUSPECTED"},
+    {"event_id": "E2", "event_type": "ACTION", "action_code": "ADMINISTER_HEPARIN", "source_span": "I recommend administering intravenous heparin immediately", "assertion_status": "PROPOSED"}
+  ], "relations": []
+}

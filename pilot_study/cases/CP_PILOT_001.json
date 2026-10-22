@@ -1,0 +1,33 @@
+{
+  "case_id": "CP_RULE01_001",
+  "target_rule": "RULE_01_MANDATORY_ECG",
+  "clinical_vignette": "A 58-year-old male presents to the Emergency Department complaining of central chest pressure that started 45 minutes ago while resting. He is diaphoretic. Vital signs: BP 150/90, HR 95, RR 18, SpO2 98% on room air.",
+  "ground_truth": {
+    "must_include": ["ORDER_ECG"],
+    "critical_omission_penalty": true
+  },
+  "mock_traces": {
+    "pass_trace": [
+      {
+        "id": "t1_e1",
+        "event_type": "ACTION",
+        "content": "Order immediate 12-lead ECG",
+        "metadata": {"action_code": "ORDER_ECG"}
+      }
+    ],
+    "fail_trace": [
+      {
+        "id": "t2_e1",
+        "event_type": "ACTION",
+        "content": "Administer oral antacid",
+        "metadata": {"action_code": "MEDICATION_ANTACID"}
+      },
+      {
+        "id": "t2_e2",
+        "event_type": "INFERENCE",
+        "content": "Patient likely experiencing gastroesophageal reflux.",
+        "metadata": {"support_required": true}
+      }
+    ]
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "events": [
+    {"event_id": "E1", "event_type": "INFERENCE", "inference_code": "PE", "source_span": "Pulmonary embolism is one possible explanation", "assertion_status": "SUSPECTED"},
+    {"event_id": "E2", "event_type": "ACTION", "action_code": "ASSESS_PE_CLINICAL_PROBABILITY", "source_span": "I would assess the patient's clinical probability", "assertion_status": "PROPOSED"},
+    {"event_id": "E3", "event_type": "ACTION", "action_code": "ORDER_DDIMER", "source_span": "determine whether D-dimer testing is appropriate", "assertion_status": "PROPOSED"}
+  ], "relations": []
+}

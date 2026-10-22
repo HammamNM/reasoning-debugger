@@ -1,0 +1,8 @@
+{
+  "events": [
+    {"event_id": "E1", "event_type": "INFERENCE", "inference_code": "NSTEMI", "source_span": "The patient has confirmed NSTEMI", "assertion_status": "DEFINITIVE"},
+    {"event_id": "E2", "event_type": "OBSERVATION", "observation_code": "NO_ECG", "source_span": "No ECG has been performed", "assertion_status": "OBSERVED_RESULT"},
+    {"event_id": "E3", "event_type": "OBSERVATION", "observation_code": "NO_TROPONIN", "source_span": "no troponin result is available", "assertion_status": "OBSERVED_RESULT"}
+  ],
+  "relations": []
+}

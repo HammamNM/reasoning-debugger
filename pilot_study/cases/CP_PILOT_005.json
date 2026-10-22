@@ -1,0 +1,24 @@
+{
+  "case_id": "CP_RULE05_001",
+  "target_rule": "RULE_05_UNSUPPORTED_INFERENCE",
+  "clinical_vignette": "A 45-year-old patient presents with chest pain. Vital signs have not yet been obtained...",
+  "ground_truth": {
+    "require_kernel_validation": true,
+    "expected_finding": "UNSUPPORTED_INFERENCE",
+    "expected_pattern_id": "RP-001"
+  },
+  "mock_traces": {
+    "unsupported_diagnosis_trace": [
+      { 
+        "id": "t1", 
+        "event_type": "INFERENCE", 
+        "content": "NSTEMI Diagnosis",
+        "metadata": { 
+          "inference_code": "NSTEMI", 
+          "claim_status": "DEFINITIVE", 
+          "support_required": true 
+        } 
+      }
+    ]
+  }
+}
