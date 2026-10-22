@@ -96,7 +96,7 @@ class ClinicalRuleEvaluator:
         found_actions_map = {}
 
         for idx, event in enumerate(trace_events):
-            if not isinstance(event, dict) or event.get('event_type') != 'ACTION':
+            if not isinstance(event, dict) or event.get('event_type') not in ['ACTION', 'OBSERVATION']:
                 continue
             metadata = event.get('metadata')
             if not isinstance(metadata, dict): continue
