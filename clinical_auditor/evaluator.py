@@ -27,7 +27,6 @@ class ClinicalRuleEvaluator:
             from kernel.events import create_event
             from kernel.reasoning_graph_builder import ReasoningGraphBuilder
             from kernel.graph import EdgeRelation
-            # استدعاء كاشف analytics المعتمد في الاختبارات
             from analytics.unsupported_inference_detector import UnsupportedInferenceDetector
         except ImportError as e:
             return {"status": "ERROR", "finding": "KERNEL_INTEGRATION_FAILED", "details": str(e)}
@@ -62,16 +61,13 @@ class ClinicalRuleEvaluator:
             
             for support_id in supported_by:
                 if support_id in node_map and original_id in node_map:
-                    # بناء العلاقة في الاتجاه الذي يتوقعه الكاشف (من الاستنتاج إلى الدليل)
-                    builder.graph.add_edge(original_id, support_id, EdgeRelation.DERIVED_FROM)
-                    # ونبنيها في الاتجاه المعاكس كإجراء احترازي لتوافق النواة
-                    builder.graph.add_edge(support_id, original_id, EdgeRelation.DERIVED_FROM)
+                    # بناء العلاقة الصحيحة (SUPPORTS) من الدليل إلى الاستنتاج
+                    builder.graph.add_edge(support_id, original_id, EdgeRelation.SUPPORTS)
 
         detector = UnsupportedInferenceDetector()
         patterns = detector.detect(builder.graph)
 
         if patterns:
-            # معالجة الناتج سواء كان قاموساً أو كائن DebugFinding
             kernel_res = patterns[0]
             if hasattr(kernel_res, '__dict__'):
                 kernel_res = kernel_res.__dict__
