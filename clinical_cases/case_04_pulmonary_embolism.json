@@ -1,0 +1,15 @@
+{
+  "case_id": "CP_RULE04_001",
+  "target_rule": "RULE_04_SUSPECTED_PULMONARY_EMBOLISM",
+  "clinical_vignette": "A 32-year-old woman taking combined oral contraceptives presents with pleuritic chest pain...",
+  "ground_truth": {
+    "must_include": ["ASSESS_PE_CLINICAL_PROBABILITY"],
+    "must_include_any": ["ORDER_DDIMER", "ORDER_CTPA"]
+  },
+  "mock_traces": {
+    "ddimer_pathway": [
+      { "id": "t1", "event_type": "ACTION", "metadata": { "action_code": "ASSESS_PE_CLINICAL_PROBABILITY" } },
+      { "id": "t2", "event_type": "ACTION", "metadata": { "action_code": "ORDER_DDIMER" } }
+    ]
+  }
+}

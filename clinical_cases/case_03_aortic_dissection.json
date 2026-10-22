@@ -1,0 +1,21 @@
+{
+  "case_id": "CP_RULE03_001",
+  "target_rule": "RULE_03_SUSPECTED_AORTIC_DISSECTION",
+  "clinical_vignette": "A 68-year-old patient with chronic hypertension presents with sudden severe tearing chest pain...",
+  "ground_truth": {
+    "must_include": ["URGENT_SPECIALIST_ASSESSMENT", "ASSESS_HEMODYNAMIC_STATUS"],
+    "must_avoid": ["ADMINISTER_HEPARIN", "ADMINISTER_THROMBOLYTICS"],
+    "must_include_any": ["ORDER_CTA_AORTA", "PERFORM_BEDSIDE_ECHOCARDIOGRAPHY"]
+  },
+  "mock_traces": {
+    "safe_pathway": [
+      { "id": "t1", "event_type": "ACTION", "metadata": { "action_code": "ASSESS_HEMODYNAMIC_STATUS" } },
+      { "id": "t2", "event_type": "ACTION", "metadata": { "action_code": "URGENT_SPECIALIST_ASSESSMENT" } },
+      { "id": "t3", "event_type": "ACTION", "metadata": { "action_code": "ORDER_CTA_AORTA" } }
+    ],
+    "fatal_error_pathway": [
+      { "id": "t1", "event_type": "ACTION", "metadata": { "action_code": "ASSESS_HEMODYNAMIC_STATUS" } },
+      { "id": "t2", "event_type": "ACTION", "metadata": { "action_code": "ADMINISTER_HEPARIN" } }
+    ]
+  }
+}
