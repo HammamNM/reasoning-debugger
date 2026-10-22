@@ -26,15 +26,14 @@ class ClinicalRuleEvaluator:
         try:
             from kernel.events import create_event
             from kernel.reasoning_graph_builder import ReasoningGraphBuilder
-            try:
-                from kernel.unsupported_inference_detector import UnsupportedInferenceDetector
-            except ImportError:
-                from analytics.unsupported_inference_detector import UnsupportedInferenceDetector
+            from kernel.graph import EdgeRelation
+            # استدعاء كاشف analytics المعتمد في الاختبارات
+            from analytics.unsupported_inference_detector import UnsupportedInferenceDetector
         except ImportError as e:
             return {"status": "ERROR", "finding": "KERNEL_INTEGRATION_FAILED", "details": str(e)}
 
         builder = ReasoningGraphBuilder()
-        event_map = {}
+        node_map = {}
 
         for idx, event_dict in enumerate(trace_events):
             if not isinstance(event_dict, dict): continue
@@ -44,30 +43,44 @@ class ClinicalRuleEvaluator:
             original_id = event_dict.get('id', f"e_{idx}")
             metadata = event_dict.get('metadata', {})
             
-            ev = create_event(e_type, {"content": content}, source="CLINICAL_TRACE")
-            # Create a new immutable instance with the mapped ID and metadata
-            ev = dataclasses.replace(ev, event_id=original_id, metadata=metadata)
+            ev = create_event(e_type, {"content": content}, source="AGENT_TRACE")
+            node = builder.process_event(ev)
             
-            builder.process_event(ev)
-            event_map[original_id] = ev
+            if node:
+                node.id = original_id 
+                if node.provenance and "support_required" in metadata:
+                    if node.provenance.metadata is None:
+                        node.provenance.metadata = {}
+                    node.provenance.metadata["support_required"] = metadata["support_required"]
+                    
+                node_map[original_id] = node
 
         for event_dict in trace_events:
             if not isinstance(event_dict, dict): continue
             original_id = event_dict.get('id')
             supported_by = event_dict.get('metadata', {}).get('supported_by', [])
+            
             for support_id in supported_by:
-                if support_id in event_map and original_id in event_map:
-                    builder.connect_support(support_id, original_id)
+                if support_id in node_map and original_id in node_map:
+                    # بناء العلاقة في الاتجاه الذي يتوقعه الكاشف (من الاستنتاج إلى الدليل)
+                    builder.graph.add_edge(original_id, support_id, EdgeRelation.DERIVED_FROM)
+                    # ونبنيها في الاتجاه المعاكس كإجراء احترازي لتوافق النواة
+                    builder.graph.add_edge(support_id, original_id, EdgeRelation.DERIVED_FROM)
 
         detector = UnsupportedInferenceDetector()
         patterns = detector.detect(builder.graph)
 
         if patterns:
+            # معالجة الناتج سواء كان قاموساً أو كائن DebugFinding
+            kernel_res = patterns[0]
+            if hasattr(kernel_res, '__dict__'):
+                kernel_res = kernel_res.__dict__
+                
             return {
                 "status": "FAIL",
                 "finding": "UNSUPPORTED_INFERENCE",
                 "evaluation_method": "KERNEL_STRUCTURAL_DETECTION",
-                "kernel_result": patterns[0]
+                "kernel_result": kernel_res
             }
 
         return {
