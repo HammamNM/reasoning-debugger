@@ -160,3 +160,8 @@ class ClinicalRuleEvaluator:
                 for failure in result.get('failures', []):
                     print(f"   [!] {failure['finding']}: {failure['details']}")
             print("")
+
+if __name__ == "__main__":
+    case_file = sys.argv[1] if len(sys.argv) > 1 else "clinical_cases/case_01_mandatory_ecg.json"
+    evaluator = ClinicalRuleEvaluator(case_path=case_file)
+    evaluator.run_audit()
