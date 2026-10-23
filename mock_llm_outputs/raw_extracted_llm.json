@@ -1,0 +1,52 @@
+{
+  "source_response_id": "LLM_RESP_001",
+  "events": [
+    {
+      "event_id": "E1",
+      "event_type": "OBSERVATION",
+      "source_span": "The patient presents with atypical chest pain.",
+      "assertion_status": "OBSERVED_RESULT"
+    },
+    {
+      "event_id": "E2",
+      "event_type": "ACTION",
+      "action_code": "PERFORM_ECG",
+      "source_span": "An initial ECG was performed",
+      "assertion_status": "REPORTED_PERFORMED"
+    },
+    {
+      "event_id": "E3",
+      "event_type": "OBSERVATION",
+      "source_span": "is nondiagnostic",
+      "assertion_status": "OBSERVED_RESULT"
+    },
+    {
+      "event_id": "E4",
+      "event_type": "ACTION",
+      "action_code": "ORDER_TROPONIN",
+      "source_span": "I recommend ordering a high-sensitivity troponin test.",
+      "assertion_status": "PROPOSED"
+    },
+    {
+      "event_id": "E5",
+      "event_type": "OBSERVATION",
+      "source_span": "the patient's pain improved after a GI cocktail",
+      "assertion_status": "OBSERVED_RESULT"
+    },
+    {
+      "event_id": "E6",
+      "event_type": "INFERENCE",
+      "inference_code": "NSTEMI",
+      "source_span": "the patient has confirmed NSTEMI",
+      "assertion_status": "DEFINITIVE"
+    },
+    {
+      "event_id": "E7",
+      "event_type": "ACTION",
+      "action_code": "DISCHARGE",
+      "source_span": "can be safely discharged now",
+      "assertion_status": "PROPOSED"
+    }
+  ],
+  "relations": []
+}

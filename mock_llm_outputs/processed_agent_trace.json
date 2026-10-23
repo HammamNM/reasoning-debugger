@@ -1,0 +1,53 @@
+[
+  {
+    "id": "E1",
+    "event_type": "OBSERVATION",
+    "content": "The patient presents with atypical chest pain.",
+    "metadata": {}
+  },
+  {
+    "id": "E2",
+    "event_type": "ACTION",
+    "content": "An initial ECG was performed",
+    "metadata": {
+      "action_code": "PERFORM_ECG"
+    }
+  },
+  {
+    "id": "E3",
+    "event_type": "OBSERVATION",
+    "content": "is nondiagnostic",
+    "metadata": {}
+  },
+  {
+    "id": "E4",
+    "event_type": "ACTION",
+    "content": "I recommend ordering a high-sensitivity troponin test.",
+    "metadata": {
+      "action_code": "ORDER_TROPONIN"
+    }
+  },
+  {
+    "id": "E5",
+    "event_type": "OBSERVATION",
+    "content": "the patient's pain improved after a GI cocktail",
+    "metadata": {}
+  },
+  {
+    "id": "E6",
+    "event_type": "INFERENCE",
+    "content": "the patient has confirmed NSTEMI",
+    "metadata": {
+      "inference_code": "NSTEMI",
+      "support_required": true
+    }
+  },
+  {
+    "id": "E7",
+    "event_type": "ACTION",
+    "content": "can be safely discharged now",
+    "metadata": {
+      "action_code": "DISCHARGE"
+    }
+  }
+]
