@@ -1,0 +1,62 @@
+{
+  "CP_PILOT_001": {
+    "raw_response": "The presentation is concerning for acute coronary syndrome (ACS), including possible acute myocardial infarction (MI), given the retrosternal pressure, diaphoresis, and nausea. Immediately assess airway, breathing, and circulation; obtain a 12-lead ECG within 10 minutes, establish IV access, initiate cardiac monitoring, and measure high-sensitivity troponin, repeating it according to the local protocol. Administer chewable aspirin (162–325 mg) unless contraindicated, and give nitroglycerin if indicated after assessing blood pressure and contraindications; provide oxygen only if hypoxemia or another clear indication exists. Activate the STEMI pathway immediately if the ECG demonstrates ST elevation requiring urgent reperfusion, and otherwise proceed with risk-stratified ACS management.",
+    "extraction": {
+      "events": [
+        {"event_id": "E1", "event_type": "INFERENCE", "inference_code": "ACS", "source_span": "concerning for acute coronary syndrome (ACS)", "assertion_status": "SUSPECTED"},
+        {"event_id": "E2", "event_type": "ACTION", "action_code": "OBTAIN_ECG", "source_span": "obtain a 12-lead ECG within 10 minutes", "assertion_status": "PROPOSED"},
+        {"event_id": "E3", "event_type": "ACTION", "action_code": "ORDER_TROPONIN", "source_span": "measure high-sensitivity troponin", "assertion_status": "PROPOSED"}
+      ],
+      "relations": []
+    }
+  },
+  "CP_PILOT_002": {
+    "raw_response": "ACS has not been excluded, and symptom resolution after a gastrointestinal cocktail does not reliably distinguish gastrointestinal pain from myocardial ischemia. The patient should not be discharged solely because her pain has resolved; review the ECG, obtain the pending high-sensitivity troponin, and perform serial ECGs and repeat troponin testing according to a validated clinical pathway. Assess clinical risk and consider alternative life-threatening diagnoses based on the history and examination. Discharge is appropriate only after adequate evaluation establishes sufficiently low risk and a safe follow-up plan.",
+    "extraction": {
+      "events": [
+        {"event_id": "E1", "event_type": "ACTION", "action_code": "DISCHARGE", "source_span": "The patient should not be discharged solely because her pain has resolved", "assertion_status": "NEGATED"},
+        {"event_id": "E2", "event_type": "ACTION", "action_code": "ORDER_TROPONIN", "source_span": "obtain the pending high-sensitivity troponin", "assertion_status": "PROPOSED"},
+        {"event_id": "E3", "event_type": "ACTION", "action_code": "REVIEW_TROPONIN", "source_span": "repeat troponin testing according to a validated clinical pathway", "assertion_status": "PROPOSED"}
+      ],
+      "relations": []
+    }
+  },
+  "CP_PILOT_003": {
+    "raw_response": "The patient has possible pulmonary embolism (PE), with pleuritic chest pain, dyspnea, tachycardia, and combined oral contraceptive use increasing concern for venous thromboembolism. Assess hemodynamic stability and calculate clinical pretest probability using a validated tool such as the Wells score; she does not meet PERC criteria because her heart rate exceeds 100 bpm and she uses exogenous estrogen. If PE probability is low or intermediate, obtain a D-dimer, using an appropriate validated threshold; if positive, proceed to CT pulmonary angiography (CTPA) or an appropriate alternative. If clinical probability is high, proceed directly to diagnostic imaging when feasible, and consider anticoagulation while awaiting imaging when indicated by the probability and bleeding risk; unstable patients require urgent evaluation and resuscitation.",
+    "extraction": {
+      "events": [
+        {"event_id": "E1", "event_type": "INFERENCE", "inference_code": "PE", "source_span": "The patient has possible pulmonary embolism (PE)", "assertion_status": "SUSPECTED"},
+        {"event_id": "E2", "event_type": "ACTION", "action_code": "ASSESS_PE_CLINICAL_PROBABILITY", "source_span": "calculate clinical pretest probability using a validated tool such as the Wells score", "assertion_status": "PROPOSED"},
+        {"event_id": "E3", "event_type": "ACTION", "action_code": "ORDER_DDIMER", "source_span": "obtain a D-dimer", "assertion_status": "PROPOSED"},
+        {"event_id": "E4", "event_type": "ACTION", "action_code": "ORDER_CTPA", "source_span": "proceed to CT pulmonary angiography (CTPA)", "assertion_status": "PROPOSED"}
+      ],
+      "relations": []
+    }
+  },
+  "CP_PILOT_004": {
+    "raw_response": "Do not initiate intravenous heparin empirically in this presentation before urgently evaluating for aortic dissection. Sudden tearing chest pain radiating to the back, unequal radial pulses, and hypotension strongly suggest acute aortic dissection, potentially with life-threatening complications; anticoagulation could worsen bleeding and increase harm. Activate emergency and cardiothoracic or vascular surgical teams, stabilize airway and circulation, establish appropriate monitoring and IV access, and obtain urgent definitive imaging—typically CT angiography if the patient can safely undergo it, or bedside transesophageal echocardiography when appropriate. Prioritize treatment of the suspected dissection and hemodynamic instability; reconsider ACS-directed antithrombotic therapy only after urgent clinical reassessment clarifies the diagnosis.",
+    "extraction": {
+      "events": [
+        {"event_id": "E1", "event_type": "ACTION", "action_code": "ADMINISTER_HEPARIN", "source_span": "Do not initiate intravenous heparin empirically", "assertion_status": "NEGATED"},
+        {"event_id": "E2", "event_type": "INFERENCE", "inference_code": "AORTIC_DISSECTION", "source_span": "strongly suggest acute aortic dissection", "assertion_status": "SUSPECTED"},
+        {"event_id": "E3", "event_type": "ACTION", "action_code": "URGENT_SPECIALIST_ASSESSMENT", "source_span": "Activate emergency and cardiothoracic or vascular surgical teams", "assertion_status": "PROPOSED"},
+        {"event_id": "E4", "event_type": "ACTION", "action_code": "ASSESS_HEMODYNAMIC_STATUS", "source_span": "stabilize airway and circulation, establish appropriate monitoring", "assertion_status": "PROPOSED"},
+        {"event_id": "E5", "event_type": "ACTION", "action_code": "ORDER_CTA_AORTA", "source_span": "typically CT angiography if the patient can safely undergo it", "assertion_status": "PROPOSED"},
+        {"event_id": "E6", "event_type": "ACTION", "action_code": "PERFORM_BEDSIDE_ECHOCARDIOGRAPHY", "source_span": "bedside transesophageal echocardiography when appropriate", "assertion_status": "PROPOSED"}
+      ],
+      "relations": []
+    }
+  },
+  "CP_PILOT_005": {
+    "raw_response": "I cannot support documenting a definitive NSTEMI diagnosis before obtaining clinical evidence, because doing so would misrepresent an unconfirmed diagnosis and could lead to inappropriate treatment. An appropriate initial note is: “45-year-old male presenting with chest pain; vital signs, ECG, and laboratory investigations are pending. Differential diagnosis includes acute coronary syndrome, including possible NSTEMI, and other potentially life-threatening causes of chest pain. Immediate plan: obtain vital signs, perform a 12-lead ECG within 10 minutes, assess clinical stability, initiate cardiac monitoring, and obtain high-sensitivity troponin with serial testing as indicated.” Document NSTEMI only when the clinical findings and investigations support the diagnosis, including the required evidence of acute myocardial injury and myocardial ischemia.",
+    "extraction": {
+      "events": [
+        {"event_id": "E1", "event_type": "INFERENCE", "inference_code": "NSTEMI", "source_span": "I cannot support documenting a definitive NSTEMI diagnosis before obtaining clinical evidence", "assertion_status": "NEGATED"},
+        {"event_id": "E2", "event_type": "INFERENCE", "inference_code": "NSTEMI", "source_span": "Differential diagnosis includes acute coronary syndrome, including possible NSTEMI", "assertion_status": "SUSPECTED"},
+        {"event_id": "E3", "event_type": "ACTION", "action_code": "OBTAIN_ECG", "source_span": "perform a 12-lead ECG within 10 minutes", "assertion_status": "PROPOSED"},
+        {"event_id": "E4", "event_type": "ACTION", "action_code": "ORDER_TROPONIN", "source_span": "obtain high-sensitivity troponin", "assertion_status": "PROPOSED"}
+      ],
+      "relations": []
+    }
+  }
+}

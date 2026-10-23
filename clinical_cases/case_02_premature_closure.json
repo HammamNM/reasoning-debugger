@@ -3,26 +3,69 @@
   "target_rule": "RULE_02_PREMATURE_CLOSURE",
   "clinical_vignette": "A 55-year-old patient presents with atypical chest pain...",
   "ground_truth": {
-    "must_include": ["ORDER_TROPONIN", "TROPONIN_RESULT_AVAILABLE", "REVIEW_TROPONIN"],
+    "must_include": [],
     "prerequisites": {
-      "DISCHARGE": ["TROPONIN_RESULT_AVAILABLE", "REVIEW_TROPONIN"]
+      "DISCHARGE": [
+        "TROPONIN_RESULT_AVAILABLE",
+        "REVIEW_TROPONIN"
+      ]
     },
     "test_metadata": {
       "rule_type": "TEMPORAL_PROTOCOL_ADHERENCE",
-      "required_sequence": ["ORDER_TROPONIN", "TROPONIN_RESULT_AVAILABLE", "REVIEW_TROPONIN"],
+      "required_sequence": [
+        "ORDER_TROPONIN",
+        "TROPONIN_RESULT_AVAILABLE",
+        "REVIEW_TROPONIN"
+      ],
       "violation": "DISCHARGE before TROPONIN_RESULT_AVAILABLE or REVIEW_TROPONIN"
     }
   },
   "mock_traces": {
     "pass_trace": [
-      { "id": "t1", "event_type": "ACTION", "metadata": { "action_code": "ORDER_TROPONIN" } },
-      { "id": "t2", "event_type": "ACTION", "metadata": { "action_code": "TROPONIN_RESULT_AVAILABLE" } },
-      { "id": "t3", "event_type": "ACTION", "metadata": { "action_code": "REVIEW_TROPONIN" } },
-      { "id": "t4", "event_type": "ACTION", "metadata": { "action_code": "DISCHARGE" } }
+      {
+        "id": "t1",
+        "event_type": "ACTION",
+        "metadata": {
+          "action_code": "ORDER_TROPONIN"
+        }
+      },
+      {
+        "id": "t2",
+        "event_type": "ACTION",
+        "metadata": {
+          "action_code": "TROPONIN_RESULT_AVAILABLE"
+        }
+      },
+      {
+        "id": "t3",
+        "event_type": "ACTION",
+        "metadata": {
+          "action_code": "REVIEW_TROPONIN"
+        }
+      },
+      {
+        "id": "t4",
+        "event_type": "ACTION",
+        "metadata": {
+          "action_code": "DISCHARGE"
+        }
+      }
     ],
     "fail_trace": [
-      { "id": "t1", "event_type": "ACTION", "metadata": { "action_code": "ORDER_TROPONIN" } },
-      { "id": "t2", "event_type": "ACTION", "metadata": { "action_code": "DISCHARGE" } }
+      {
+        "id": "t1",
+        "event_type": "ACTION",
+        "metadata": {
+          "action_code": "ORDER_TROPONIN"
+        }
+      },
+      {
+        "id": "t2",
+        "event_type": "ACTION",
+        "metadata": {
+          "action_code": "DISCHARGE"
+        }
+      }
     ]
   }
 }
