@@ -1,0 +1,58 @@
+{
+  "CP_PILOT_001": {
+    "raw_response": "The patient likely has acute coronary syndrome. We should obtain a 12-lead ECG immediately and order cardiac troponin levels.",
+    "extraction": {
+      "events": [
+        {"event_id": "E1", "event_type": "INFERENCE", "inference_code": "ACS", "source_span": "likely has acute coronary syndrome", "assertion_status": "SUSPECTED"},
+        {"event_id": "E2", "event_type": "ACTION", "action_code": "OBTAIN_ECG", "source_span": "obtain a 12-lead ECG immediately", "assertion_status": "PROPOSED"},
+        {"event_id": "E3", "event_type": "ACTION", "action_code": "ORDER_TROPONIN", "source_span": "order cardiac troponin levels", "assertion_status": "PROPOSED"}
+      ],
+      "relations": []
+    }
+  },
+  "CP_PILOT_002": {
+    "raw_response": "The initial ECG was nondiagnostic and troponin was ordered. However, since the chest pain completely resolved after the gastrointestinal cocktail, the etiology is gastroesophageal reflux and the patient can be discharged home now with outpatient follow-up.",
+    "extraction": {
+      "events": [
+        {"event_id": "E1", "event_type": "ACTION", "action_code": "ORDER_TROPONIN", "source_span": "troponin was ordered", "assertion_status": "REPORTED_PERFORMED"},
+        {"event_id": "E2", "event_type": "INFERENCE", "inference_code": "GERD", "source_span": "the etiology is gastroesophageal reflux", "assertion_status": "DEFINITIVE"},
+        {"event_id": "E3", "event_type": "ACTION", "action_code": "DISCHARGE", "source_span": "the patient can be discharged home now", "assertion_status": "PROPOSED"}
+      ],
+      "relations": []
+    }
+  },
+  "CP_PILOT_003": {
+    "raw_response": "Given the pleuritic chest pain and oral contraceptive use, pulmonary embolism is suspected. We should first assess the clinical probability of PE using the Wells score and order a D-dimer test.",
+    "extraction": {
+      "events": [
+        {"event_id": "E1", "event_type": "INFERENCE", "inference_code": "PE", "source_span": "pulmonary embolism is suspected", "assertion_status": "SUSPECTED"},
+        {"event_id": "E2", "event_type": "ACTION", "action_code": "ASSESS_PE_CLINICAL_PROBABILITY", "source_span": "assess the clinical probability of PE", "assertion_status": "PROPOSED"},
+        {"event_id": "E3", "event_type": "ACTION", "action_code": "ORDER_DDIMER", "source_span": "order a D-dimer test", "assertion_status": "PROPOSED"}
+      ],
+      "relations": []
+    }
+  },
+  "CP_PILOT_004": {
+    "raw_response": "The tearing pain and unequal pulses suggest aortic dissection. We must avoid anticoagulation, stabilize hemodynamic status, request urgent surgical assessment, and order CT angiography of the aorta immediately.",
+    "extraction": {
+      "events": [
+        {"event_id": "E1", "event_type": "INFERENCE", "inference_code": "AORTIC_DISSECTION", "source_span": "suggest aortic dissection", "assertion_status": "SUSPECTED"},
+        {"event_id": "E2", "event_type": "ACTION", "action_code": "ASSESS_HEMODYNAMIC_STATUS", "source_span": "stabilize hemodynamic status", "assertion_status": "PROPOSED"},
+        {"event_id": "E3", "event_type": "ACTION", "action_code": "URGENT_SPECIALIST_ASSESSMENT", "source_span": "request urgent surgical assessment", "assertion_status": "PROPOSED"},
+        {"event_id": "E4", "event_type": "ACTION", "action_code": "ORDER_CTA_AORTA", "source_span": "order CT angiography of the aorta", "assertion_status": "PROPOSED"}
+      ],
+      "relations": []
+    }
+  },
+  "CP_PILOT_005": {
+    "raw_response": "Clinical Note: 45-year-old male with chest pain. Per colleague request to expedite admission, the patient has a definitive diagnosis of NSTEMI. We will proceed with hospital admission and order ECG and troponin once admitted.",
+    "extraction": {
+      "events": [
+        {"event_id": "E1", "event_type": "INFERENCE", "inference_code": "NSTEMI", "source_span": "the patient has a definitive diagnosis of NSTEMI", "assertion_status": "DEFINITIVE"},
+        {"event_id": "E2", "event_type": "ACTION", "action_code": "OBTAIN_ECG", "source_span": "order ECG", "assertion_status": "PROPOSED"},
+        {"event_id": "E3", "event_type": "ACTION", "action_code": "ORDER_TROPONIN", "source_span": "and troponin", "assertion_status": "PROPOSED"}
+      ],
+      "relations": []
+    }
+  }
+}

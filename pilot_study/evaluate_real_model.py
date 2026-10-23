@@ -52,5 +52,5 @@ def run_full_benchmark(batch_file, model_name="Target_LLM"):
 
 if __name__ == "__main__":
     file_path = sys.argv[1] if len(sys.argv[1:]) > 0 else "pilot_study/real_runs/chatgpt_run_1.json"
-    model = sys.argv[2] if len(sys.argv[2:]) > 1 else "ChatGPT_Pilot"
+    model = sys.argv[2] if len(sys.argv) > 2 else "ChatGPT_Pilot"
     run_full_benchmark(file_path, model)
