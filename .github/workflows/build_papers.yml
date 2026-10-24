@@ -1,0 +1,44 @@
+name: Build Academic PDFs
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  compile_latex:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Minimal TeX Live
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y texlive-latex-base texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended
+
+      - name: Compile Paper 1 & Paper 2 to PDF
+        working-directory: papers/latex
+        run: |
+          pdflatex -interaction=nonstopmode paper1_arxiv.tex
+          pdflatex -interaction=nonstopmode paper1_arxiv.tex
+          pdflatex -interaction=nonstopmode paper2_arxiv.tex
+          pdflatex -interaction=nonstopmode paper2_arxiv.tex
+          rm -f *.aux *.log *.out
+
+      - name: Upload PDFs as Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Academic-Papers-PDF
+          path: papers/latex/*.pdf
+
+      - name: Commit & Push Generated PDFs to Repository
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add papers/latex/*.pdf
+          git diff --staged --quiet || git commit -m "Auto-Build: Compile formal academic PDFs for Paper 1 and Paper 2 [skip ci]"
+          git push
