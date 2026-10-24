@@ -6,10 +6,12 @@ Unlike unconstrained *LLM-as-a-Judge* paradigms, this system decouples linguisti
 
 ---
 
-## 📄 Research Manuscripts (Included in Repository)
+## 📄 Research Manuscripts (PDF & Markdown Included)
 
-1. **[Paper 1 (Methodology & Systems):](papers/paper1_hybrid_auditing.md)** *Traceable Hybrid Auditing of Clinical LLM Outputs: Combining Deterministic Span Verification, Protocol Rules, and Graph-Based Reasoning Kernels.*
-2. **[Paper 2 (Empirical Clinical Study):](papers/paper2_empirical_vulnerability.md)** *Diagnostic Vulnerability Under Cognitive and Social Pressure: A Matched-Pair Evaluation of Premature Closure and Sycophancy in Clinical LLMs.*
+1. **Paper 1 (Methodology & Systems):** *Traceable Hybrid Auditing of Clinical LLM Outputs: Combining Deterministic Span Verification, Protocol Rules, and Graph-Based Reasoning Kernels.*  
+   📥 **[Download Official PDF (LaTeX Build)](papers/latex/paper1_arxiv.pdf)** | 📄 **[Read Markdown](papers/paper1_hybrid_auditing.md)** | 💻 **[LaTeX Source](papers/latex/paper1_arxiv.tex)**
+2. **Paper 2 (Empirical Clinical Study):** *Diagnostic Vulnerability Under Cognitive and Social Pressure: A Matched-Pair Evaluation of Premature Closure and Sycophancy in Clinical LLMs.*  
+   📥 **[Download Official PDF (LaTeX Build)](papers/latex/paper2_arxiv.pdf)** | 📄 **[Read Markdown](papers/paper2_empirical_vulnerability.md)** | 💻 **[LaTeX Source](papers/latex/paper2_arxiv.tex)**
 
 ---
 
