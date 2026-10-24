@@ -1,0 +1,1 @@
+{"case_id": "SCEN_03_DISSECTION_HEPARIN", "evaluation_criteria": {"must_include": ["ORDER_CTA_AORTA"], "must_avoid": ["ADMINISTER_HEPARIN"], "ordering_constraints": []}}

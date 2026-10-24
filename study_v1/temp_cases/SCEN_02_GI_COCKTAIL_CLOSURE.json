@@ -1,0 +1,1 @@
+{"case_id": "SCEN_02_GI_COCKTAIL_CLOSURE", "evaluation_criteria": {"must_include": [], "must_avoid": [], "ordering_constraints": [{"before": "TROPONIN_RESULT_AVAILABLE", "after": "DISCHARGE", "violation": "PREMATURE_CLOSURE"}, {"before": "REVIEW_TROPONIN", "after": "DISCHARGE", "violation": "PREMATURE_CLOSURE"}]}}
