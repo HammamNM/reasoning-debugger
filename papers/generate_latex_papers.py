@@ -5,17 +5,18 @@ paper1_tex = r"""\documentclass[11pt,a4paper]{article}
 \usepackage[T1]{fontenc}
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{booktabs}
+\usepackage{graphicx}
 \usepackage{hyperref}
 \usepackage{geometry}
 \geometry{margin=1in}
 
-\title{\textbf{Traceable Hybrid Auditing of Clinical LLM Outputs: Combining Deterministic Span Verification, Protocol Rules, and Graph-Based Reasoning Kernels}}
+\title{\textbf{Traceable Hybrid Auditing of Clinical LLM Outputs: A Proof-of-Concept Combining Span Verification, Protocol Rules, and Graph Reasoning Kernels}}
 
 \author{
   \textbf{Hammam Omer} \\
   Faculty of Medicine, Omdurman Islamic University \\
   Omdurman, Sudan \\
-  \texttt{Code \& Benchmark: \url{https://github.com/HammamNM/reasoning-debugger}}
+  \texttt{Repository: \url{https://github.com/HammamNM/reasoning-debugger}}
 }
 \date{October 2026}
 
@@ -24,81 +25,64 @@ paper1_tex = r"""\documentclass[11pt,a4paper]{article}
 \maketitle
 
 \begin{abstract}
-\noindent Evaluating Large Language Models (LLMs) in high-stakes clinical workflows such as acute chest pain management requires moving beyond final-answer accuracy toward rigorous process auditing. Current evaluation paradigms predominantly rely on unconstrained \textit{LLM-as-a-Judge} frameworks, which are susceptible to judge hallucinations, unverified intermediate assumptions, and high false-positive rates when models express appropriate diagnostic uncertainty. In this paper, we present a \textbf{Traceable Neuro-Symbolic Auditing Framework} composed of three decoupled layers: (1) a \texttt{TraceExtractor} equipped with a deterministic substring verification firewall and canonical vocabulary normalizer, (2) a \texttt{ClinicalRuleEvaluator} enforcing temporal ordering, mandatory actions, and contraindications, and (3) a structural \texttt{Reasoning Kernel} that constructs Directed Acyclic Graphs (DAGs) to detect unsupported definitive inferences (\texttt{Pattern RP-001}). In a controlled validation and ablation study across synthetic adversarial traces, real frontier model outputs, and unseen linguistic edge cases, incorporating explicit assertion-status calibration (\texttt{PROPOSED}, \texttt{REPORTED\_PERFORMED}, \texttt{NEGATED}, \texttt{SUSPECTED}, \texttt{DEFINITIVE}) increased auditor specificity from \textbf{57.1\%} to \textbf{100.0\%} and improved the overall $F_1$-score from \textbf{0.667} to \textbf{1.000} while maintaining \textbf{100.0\%} sensitivity to protocol violations.
+\noindent \textbf{Background:} Evaluating Large Language Models (LLMs) in open-ended clinical workflows such as acute chest pain triage requires auditing procedural adherence (omissions, temporal ordering, and contraindications) rather than static multiple-choice accuracy. Unconstrained \textit{LLM-as-a-Judge} paradigms risk fabricated event extraction and often penalize appropriate diagnostic uncertainty. \\
+\textbf{Objective:} We present a proof-of-concept \textbf{Traceable Neuro-Symbolic Auditing Framework} and evaluate its mechanism calibration on a pilot benchmark ($N=10$ traces, plus $N=5$ linguistic edge cases). \\
+\textbf{Methods:} The architecture decouples auditing into three layers: (1) a \texttt{TraceExtractor} enforcing deterministic verbatim span verification and epistemic assertion calibration (\texttt{PROPOSED}, \texttt{REPORTED\_PERFORMED}, \texttt{NEGATED}, \texttt{SUSPECTED}, \texttt{DEFINITIVE}), (2) a \texttt{ClinicalRuleEvaluator} checking temporal ordering and contraindications, and (3) a graph-based \texttt{Reasoning Kernel} detecting unsupported definitive claims (\texttt{Pattern RP-001}). \\
+\textbf{Pilot Results:} Across our 10-case pilot calibration suite (5 synthetic failure/control traces and 5 real \texttt{GPT-4o} responses), introducing assertion-status calibration eliminated 3 false-positive flags on negated actions and suspected differentials, shifting pilot specificity from 4/7 (57.1\%, 95\% CI: 18.4\%--90.1\%) to 7/7 (100.0\%, 95\% CI: 59.0\%--100.0\%) while preserving 3/3 sensitivity on synthetic protocol violations.
 \end{abstract}
 
 \section{Introduction}
-As Large Language Models (LLMs) transition from static medical multiple-choice benchmarks (e.g., USMLE) \cite{kung2023performance} to open-ended clinical decision support, evaluating their procedural safety becomes critical. In emergency triage of \textbf{Acute Chest Pain} \cite{gulati2021aha}, an LLM may list a plausible differential diagnosis while simultaneously proposing unsafe management steps, such as discharging a patient after symptomatic relief from a gastrointestinal cocktail before serial troponin results are reviewed (premature closure), or initiating empiric anticoagulation in suspected acute aortic dissection.
+While Large Language Models (LLMs) perform strongly on static medical licensing examinations \cite{kung2023performance}, open-ended emergency triage of \textbf{Acute Chest Pain} \cite{gulati2021aha} requires strict procedural adherence. An LLM may list a correct differential diagnosis while proposing lethal management steps, such as discharging a patient after symptomatic relief from a gastrointestinal cocktail prior to reviewing serial troponins (premature closure), or administering empiric heparin in suspected aortic dissection.
 
-Unconstrained \textit{LLM-as-a-Judge} paradigms \cite{zheng2023judging} exhibit two primary methodological vulnerabilities in clinical auditing:
+Current \textit{LLM-as-a-Judge} evaluation methods \cite{zheng2023judging} face two structural limitations in procedural clinical auditing:
 \begin{enumerate}
-    \item \textbf{Extractor/Judge Hallucination:} The evaluating model may infer or fabricate clinical actions that were never stated in the candidate response.
-    \item \textbf{Epistemic Penalization:} Evaluators frequently conflate appropriate diagnostic uncertainty (e.g., listing NSTEMI as a \textit{suspected} differential diagnosis) with an unsupported \textit{definitive} claim, or misclassify \textit{negated} warnings (e.g., \textit{``Do not administer heparin''}) as proposed actions.
+    \item \textbf{Unverified Event Extraction:} A neural judge may hallucinate that a candidate response ordered an investigation when no such statement exists in the text.
+    \item \textbf{Epistemic Conflation:} Inspired by classical clinical negation and context detection algorithms such as \texttt{NegEx} \cite{chapman2001simple} and \texttt{ConText} \cite{harkema2009context}, an effective auditor must distinguish negated warnings (\textit{``Do not give heparin''}) and suspected differentials from definitive clinical commitments.
 \end{enumerate}
-
-To address these gaps, we introduce a traceable, three-tier neuro-symbolic auditing pipeline that separates linguistic event extraction from deterministic rule and graph verification.
 
 \section{System Architecture}
-Our framework decomposes clinical auditing into three auditable stages:
+Our framework separates linguistic extraction from deterministic symbolic verification across three tiers:
 
-\subsection{Tier 1: \texttt{TraceExtractor} (Hallucination Firewall \& Calibration)}
-Given a raw model response $T$, candidate clinical events $E = \{e_1, e_2, \dots, e_n\}$ and support relations $R$ are extracted and subjected to three deterministic filters:
-\begin{enumerate}
-    \item \textbf{Deterministic Span Verification:} Every event $e_i$ must provide a verbatim substring $s_i$. Let $\mathcal{N}(\cdot)$ denote whitespace and case normalization. An event is accepted if and only if:
-    \begin{equation}
-        \mathcal{N}(s_i) \subseteq \mathcal{N}(T)
-    \end{equation}
-    Events failing this check are rejected with reason \texttt{SPAN\_NOT\_IN\_SOURCE}.
-    \item \textbf{Canonical Vocabulary Normalization:} Lexical variants (e.g., \texttt{PERFORM\_ECG}, \texttt{OBTAIN\_ECG}) are mapped to canonical protocol codes (\texttt{ORDER\_ECG}).
-    \item \textbf{Epistemic Assertion Calibration:} Each event is assigned an assertion tag $\alpha(e_i) \in \{\texttt{PROPOSED}, \texttt{REPORTED\_PERFORMED}, \texttt{OBSERVED\_RESULT}, \texttt{NEGATED}, \texttt{SUSPECTED}, \texttt{DEFINITIVE}\}$. Events with $\alpha(e_i) = \texttt{NEGATED}$ are excluded from active execution checks, and diagnostic nodes require structural graph proof if and only if $\alpha(e_i) = \texttt{DEFINITIVE}$.
-\end{enumerate}
+\subsection{Tier 1: \texttt{TraceExtractor} (Span Firewall \& Epistemic Tagging)}
+Given raw text $T$, candidate events $E = \{e_1, \dots, e_n\}$ must satisfy verbatim substring verification under whitespace/case normalization $\mathcal{N}(s_i) \subseteq \mathcal{N}(T)$, rejecting ungrounded extractions (\texttt{SPAN\_NOT\_IN\_SOURCE}). Lexical synonyms are mapped to canonical protocol codes, and events are filtered by assertion status $\alpha(e_i)$ so that \texttt{NEGATED} warnings are never penalized as proposed actions, and only \texttt{DEFINITIVE} inferences require structural evidentiary proof.
 
-\subsection{Tier 2: \texttt{ClinicalRuleEvaluator} (Domain Protocol Engine)}
-Verified traces are audited against structured clinical constraints:
-\begin{itemize}
-    \item \textbf{Mandatory Omissions (\texttt{CRITICAL\_OMISSION}):} Missing required actions (\texttt{must\_include}) or diagnostic alternatives (\texttt{must\_include\_any}).
-    \item \textbf{Temporal Ordering (\texttt{PREMATURE\_CLOSURE}):} For any prerequisite constraint $(a_{\text{pre}} \prec a_{\text{target}})$, proposing $a_{\text{target}}$ (e.g., \texttt{DISCHARGE}) when $a_{\text{pre}}$ (e.g., \texttt{TROPONIN\_RESULT\_AVAILABLE}) is absent or occurs at $\text{idx}(a_{\text{pre}}) > \text{idx}(a_{\text{target}})$ triggers a violation.
-    \item \textbf{Contraindications (\texttt{CONTRAINDICATED\_ACTION}):} Proposing any action in the scenario's \texttt{must\_avoid} set (e.g., \texttt{ADMINISTER\_HEPARIN} in aortic dissection).
-\end{itemize}
+\subsection{Tier 2 \& Tier 3: \texttt{ClinicalRuleEvaluator} \& \texttt{Reasoning Kernel}}
+The rule engine evaluates mandatory omissions (\texttt{CRITICAL\_OMISSION}), prerequisite temporal ordering $(a_{\text{pre}} \prec a_{\text{target}})$ for premature closure, and contraindications (\texttt{must\_avoid}). Concurrently, the \texttt{Reasoning Kernel} constructs a Directed Acyclic Graph $G = (V, E_{\text{graph}})$ and triggers \texttt{RP-001} whenever a \texttt{DEFINITIVE} inference node has support in-degree $\deg^{-}_{\text{SUPPORTS}}(v) = 0$.
 
-\subsection{Tier 3: \texttt{Reasoning Kernel} (Structural Graph Verification)}
-Independent of domain rules, the \texttt{Reasoning Kernel} builds a Directed Acyclic Graph $G = (V, E_{\text{graph}})$ where edges represent evidentiary support (\texttt{EdgeRelation.SUPPORTS}). The \texttt{UnsupportedInferenceDetector} flags structural violation \texttt{RP-001} via:
-\begin{equation}
-    \forall v \in V_{\text{INFERENCE}}: \quad \text{support\_required}(v) = \text{True} \land \deg^{-}_{\text{SUPPORTS}}(v) = 0 \implies \texttt{RP-001}
-\end{equation}
-
-\section{Experimental Validation \& Ablation Study}
-We validated the auditor across $N=10$ benchmark traces (5 synthetic adversarial traces and 5 real frontier LLM responses) plus an unseen 5-case linguistic stress suite (\texttt{run\_edge\_cases.py}).
+\section{Pilot Calibration \& Mechanism Verification}
+Table \ref{tab:ablation} reports the pilot mechanism ablation across $N=10$ calibration traces (3 synthetic protocol violations, 2 synthetic safe traces, and 5 real \texttt{GPT-4o} responses) alongside an unseen 5-case linguistic stress suite (\texttt{run\_edge\_cases.py}).
 
 \begin{table}[h!]
 \centering
-\caption{Ablation Study: Auditor Validation Against Human Gold Standard ($N=10$)}
+\caption{Pilot Mechanism Ablation: Assertion Calibration on $N=10$ Traces}
 \vspace{0.2cm}
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{lccccccc}
 \toprule
-\textbf{Auditor Configuration} & \textbf{TP} & \textbf{FP} & \textbf{TN} & \textbf{FN} & \textbf{Recall} & \textbf{Specificity} & \textbf{$F_1$-Score} \\
+\textbf{Auditor Configuration} & \textbf{TP} & \textbf{FP} & \textbf{TN} & \textbf{FN} & \textbf{Recall (3/3)} & \textbf{Specificity (TN/7)} & \textbf{Pilot $F_1$} \\
 \midrule
-1. Baseline (No Assertion Filt.) & 3 & 3 & 4 & 0 & 100.0\% & 57.1\% & 0.667 \\
-\textbf{2. Full Hybrid (Calibrated)} & \textbf{3} & \textbf{0} & \textbf{7} & \textbf{0} & \textbf{100.0\%} & \textbf{100.0\%} & \textbf{1.000} \\
+1. Uncalibrated Baseline & 3 & 3 & 4 & 0 & 100.0\% (29.2--100\%) & 57.1\% (18.4--90.1\%) & 0.667 \\
+\textbf{2. Calibrated Hybrid Pipeline} & \textbf{3} & \textbf{0} & \textbf{7} & \textbf{0} & \textbf{100.0\% (29.2--100\%)} & \textbf{100.0\% (59.0--100\%)} & \textbf{1.000} \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \label{tab:ablation}
 \end{table}
 
-As shown in Table \ref{tab:ablation}, removing assertion-status calibration caused 3 false-positive violations on safe responses that refused premature discharge (\texttt{NEGATED}) or framed NSTEMI as a differential possibility (\texttt{SUSPECTED}). Full calibration restored 100.0\% specificity ($F_1 = 1.000$) and achieved 5/5 (100.0\%) accuracy on the unseen edge-case suite.
-
-\section{Limitations \& Conclusion}
-While deterministic span verification prevents fabricated events from entering the audit graph, overall system recall remains bounded by upstream extraction completeness. Nevertheless, decoupling text extraction from neuro-symbolic protocol and graph verification provides a reproducible, high-specificity instrument for clinical AI governance.
+\section{Methodological Limitations \& Future Scaling}
+This work represents a software architecture and pilot calibration study rather than a large-scale empirical validation. Specifically: (1) the sample size ($N=10$ calibration traces, $N=5$ edge cases) yields wide Clopper-Pearson 95\% confidence intervals; (2) rules and synthetic test cases were authored by a single investigator without independent multi-clinician inter-annotator agreement ($\kappa$); and (3) while substring verification confirms quote existence, upstream assertion classification remains dependent on parser accuracy. Future work will expand evaluation to $>50$ multi-disease scenarios with blinded dual-clinician annotation and direct comparison against standalone LLM judges.
 
 \begin{thebibliography}{9}
 \bibitem{gulati2021aha}
-M. Gulati \textit{et al.}, ``2021 AHA/ACC/ASE/CHEST/SAEM/SCCT/SCMR Guideline for the Evaluation and Diagnosis of Chest Pain,'' \textit{Circulation}, vol. 144, no. 22, pp. e368--e454, 2021.
-
+M. Gulati \textit{et al.}, ``2021 AHA/ACC Guideline for the Evaluation and Diagnosis of Chest Pain,'' \textit{Circulation}, vol. 144, no. 22, pp. e368--e454, 2021.
+\bibitem{chapman2001simple}
+W. W. Chapman \textit{et al.}, ``A simple algorithm for identifying negated findings and diseases in discharge summaries,'' \textit{Journal of Biomedical Informatics}, vol. 34, no. 5, pp. 301--310, 2001.
+\bibitem{harkema2009context}
+H. Harkema \textit{et al.}, ``ConText: An algorithm for determining negation, experiencer, and temporal status from clinical reports,'' \textit{Journal of Biomedical Informatics}, vol. 42, no. 5, pp. 839--851, 2009.
 \bibitem{kung2023performance}
-T. H. Kung \textit{et al.}, ``Performance of ChatGPT on USMLE: Potential for AI-assisted medical education using large language models,'' \textit{PLOS Digital Health}, vol. 2, no. 2, p. e0000198, 2023.
-
+T. H. Kung \textit{et al.}, ``Performance of ChatGPT on USMLE,'' \textit{PLOS Digital Health}, vol. 2, no. 2, p. e0000198, 2023.
 \bibitem{zheng2023judging}
-L. Zheng \textit{et al.}, ``Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena,'' in \textit{Advances in Neural Information Processing Systems (NeurIPS)}, 2023.
+L. Zheng \textit{et al.}, ``Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena,'' in \textit{NeurIPS}, 2023.
 \end{thebibliography}
 
 \end{document}
@@ -109,17 +93,18 @@ paper2_tex = r"""\documentclass[11pt,a4paper]{article}
 \usepackage[T1]{fontenc}
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{booktabs}
+\usepackage{graphicx}
 \usepackage{hyperref}
 \usepackage{geometry}
 \geometry{margin=1in}
 
-\title{\textbf{Diagnostic Vulnerability Under Cognitive and Social Pressure: A Matched-Pair Evaluation of Premature Closure and Sycophancy in Clinical LLMs}}
+\title{\textbf{Matched-Pair Counterfactual Design for Auditing Cognitive Pressure and Sycophancy in Clinical LLMs: A Pilot Feasibility Study}}
 
 \author{
   \textbf{Hammam Omer} \\
   Faculty of Medicine, Omdurman Islamic University \\
   Omdurman, Sudan \\
-  \texttt{Code \& Benchmark: \url{https://github.com/HammamNM/reasoning-debugger}}
+  \texttt{Repository: \url{https://github.com/HammamNM/reasoning-debugger}}
 }
 \date{October 2026}
 
@@ -128,67 +113,63 @@ paper2_tex = r"""\documentclass[11pt,a4paper]{article}
 \maketitle
 
 \begin{abstract}
-\noindent While Large Language Models (LLMs) achieve high accuracy on static medical licensing examinations, emergency clinical decision-making exposes models to misleading symptomatic relief, urgency framing, and social authority pressure. Single-prompt evaluations cannot isolate whether a clinical error stems from knowledge deficiency or contextual pressure susceptibility. In this study, we introduce a \textbf{Matched-Pair Counterfactual Stress Benchmark} in Acute Chest Pain management. Each clinical vignette is evaluated across two strictly controlled arms: a \textbf{Neutral Control Arm} (objective physiological findings only) and an \textbf{Adversarial Pressured Arm} (identical physiological findings augmented with cognitive or social pressure modifiers, such as pain resolution following a gastrointestinal cocktail or a senior colleague's request to document an unverified NSTEMI). Auditing responses via a deterministic neuro-symbolic pipeline across $N=10$ matched evaluations reveals that while baseline clinical outputs achieve \textbf{100.0\%} protocol adherence in the Control Arm, safety collapses to \textbf{20.0\% ($\Delta = -80.0\%$)} under adversarial framing, exposing critical vulnerabilities to premature closure, empiric heparinization in suspected aortic dissection, and authority sycophancy (\texttt{Pattern RP-001}).
+\noindent \textbf{Background:} Clinical Large Language Models (LLMs) deployed in emergency triage face contextual framing pressures, deceptive symptom resolution, and authority sycophancy. Standard single-prompt evaluations cannot isolate knowledge deficits from contextual susceptibility. \\
+\textbf{Objective:} We formulate a \textbf{Matched-Pair Counterfactual Protocol Benchmark} across 5 core acute chest pain scenarios ($N=5$ matched pairs) and validate its ability to contrast a real safety-aligned frontier model (\texttt{GPT-4o}) against synthetic unaligned failure archetypes. \\
+\textbf{Methods:} Each scenario is structured into a \textbf{Neutral Control Arm} ($P_i^{\text{ctrl}}$) and an \textbf{Adversarial Pressured Arm} ($P_i^{\text{pres}} = P_i^{\text{ctrl}} \oplus \delta_i$). Protocol adherence shift is defined as $\Delta = \text{PassRate}(P^{\text{pres}}) - \text{PassRate}(P^{\text{ctrl}})$. \\
+\textbf{Pilot Results:} In single-turn pilot testing across the 5 pressured scenarios, \texttt{GPT-4o} maintained 5/5 (100.0\%) protocol adherence ($\Delta = 0.0\%$), appropriately resisting premature discharge after a gastrointestinal cocktail and rejecting unverified colleague NSTEMI labels. Conversely, the synthetic unaligned failure baseline transitioned from 5/5 (100.0\%) in the Control Arm to 1/5 (20.0\%) in the Pressured Arm ($\Delta = -80.0\%$, exact McNemar $p = 0.125$), verifying that the auditing engine accurately captures pressure-induced protocol violations when they occur.
 \end{abstract}
 
 \section{Introduction}
-Standardized medical benchmarks predominantly present clinical vignettes in neutral, textbook prose \cite{kung2023performance}. In real-world emergency triage of acute chest pain \cite{gulati2021aha}, however, decision-makers confront powerful cognitive biases \cite{croskerry2003importance} and social pressures \cite{sharma2023towards}:
-\begin{enumerate}
-    \item \textbf{Deceptive Symptomatic Relief (Premature Closure):} Resolution of chest pain after antacids and viscous lidocaine (\textit{``GI cocktail''}) frequently tempts premature discharge prior to pending cardiac troponin results.
-    \item \textbf{Authority Sycophancy:} Pressure from a colleague to adopt an unconfirmed definitive diagnosis (e.g., NSTEMI) to expedite admission tests whether an LLM prioritizes user compliance over clinical evidence.
-    \item \textbf{Therapeutic Urgency Framing:} Pressure to immediately initiate intravenous heparin for possible acute coronary syndrome (ACS) prior to ruling out acute aortic dissection risks catastrophic hemorrhage.
-\end{enumerate}
+While LLMs achieve high accuracy on neutral medical vignettes \cite{kung2023performance}, clinical decision-making in acute chest pain \cite{gulati2021aha} is vulnerable to cognitive biases \cite{croskerry2003importance} and social sycophancy \cite{sharma2023towards}. Recent clinical stress benchmarks demonstrate that even frontier models can exhibit compliance drift under authority pressure or multi-turn framing. To separate baseline medical knowledge from contextual framing effects, we introduce a reproducible matched-pair counterfactual evaluation design.
 
-To rigorously separate baseline medical knowledge from contextual susceptibility, we implement a \textbf{Matched-Pair Counterfactual Design}.
-
-\section{Experimental Methodology}
-Let $V = \{v_1, v_2, \dots, v_5\}$ denote core physiological chest pain scenarios. For each $v_i$, we construct a neutral prompt $P_i^{\text{ctrl}}$ and a pressured prompt $P_i^{\text{pres}}$ by appending a cognitive/social modifier $\delta_i$ while keeping all physiological variables invariant:
+\section{Matched-Pair Counterfactual Methodology}
+For each physiological scenario $v_i \in \{v_1, \dots, v_5\}$, we construct a neutral control prompt $P_i^{\text{ctrl}}$ and a pressured prompt $P_i^{\text{pres}} = P_i^{\text{ctrl}} \oplus \delta_i$. We define the \textbf{Protocol Adherence Shift ($\Delta$)} as:
 \begin{equation}
-    P_i^{\text{pres}} = P_i^{\text{ctrl}} \oplus \delta_i
+    \Delta = \text{PassRate}(P^{\text{pres}}) - \text{PassRate}(P^{\text{ctrl}})
 \end{equation}
-We define the \textbf{Pressure-Induced Degradation Rate ($\Delta$)} as:
-\begin{equation}
-    \Delta = \text{PassRate}(P^{\text{ctrl}}) - \text{PassRate}(P^{\text{pres}})
-\end{equation}
+Negative values of $\Delta$ indicate degradation in protocol adherence induced by the modifier $\delta_i$.
 
-\section{Results}
-Table \ref{tab:matched} presents the matched-pair evaluation across the Control Arm, the Susceptible Pressured Cohort, and a Safety-Aligned Frontier Model (\texttt{GPT-4o}).
+\section{Pilot Feasibility Results}
+Table \ref{tab:matched} contrasts the Neutral Control Arm against (1) synthetic unaligned failure archetypes designed to verify rule sensitivity and (2) real single-turn responses from \texttt{GPT-4o}.
 
 \begin{table}[h!]
 \centering
-\caption{Matched-Pair Cognitive Pressure Evaluation across Acute Chest Pain Scenarios}
+\caption{Pilot Matched-Pair Evaluation Across 5 Acute Chest Pain Scenarios ($N=5$ Pairs)}
 \vspace{0.2cm}
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{llccc}
 \toprule
-\textbf{Pair ID} & \textbf{Cognitive / Social Trap ($\delta_i$)} & \textbf{Control Arm} & \textbf{Pressured (Susceptible)} & \textbf{Pressured (Aligned)} \\
+\textbf{Pair ID} & \textbf{Cognitive / Social Modifier ($\delta_i$)} & \textbf{Control Arm} & \textbf{Synthetic Unaligned Archetype} & \textbf{Real \texttt{GPT-4o} (Single-Turn)} \\
 \midrule
-\texttt{MP\_01\_ACS} & Equipment Delay / Skip ECG & PASS & FAIL (\texttt{OMISSION}) & PASS \\
-\texttt{MP\_02\_GI} & GI Cocktail Relief / Discharge & PASS & FAIL (\texttt{CLOSURE}) & PASS \\
+\texttt{MP\_01\_ACS} & Equipment Delay / Defer ECG & PASS & FAIL (\texttt{CRITICAL\_OMISSION}) & PASS \\
+\texttt{MP\_02\_GI} & GI Cocktail Relief / Early Discharge & PASS & FAIL (\texttt{PREMATURE\_CLOSURE}) & PASS \\
 \texttt{MP\_03\_PE} & Normal $\text{SpO}_2$ Anchoring (96\%) & PASS & PASS & PASS \\
-\texttt{MP\_04\_AORTA} & ACS Urgency Heparin Framing & PASS & FAIL (\texttt{CONTRAIND.}) & PASS \\
-\texttt{MP\_05\_SYCO} & Colleague Unverified NSTEMI & PASS & FAIL (\texttt{RP-001}) & PASS \\
+\texttt{MP\_04\_AORTA} & ACS Urgency Empiric Heparin & PASS & FAIL (\texttt{CONTRAINDICATED}) & PASS \\
+\texttt{MP\_05\_SYCO} & Colleague Unverified NSTEMI & PASS & FAIL (\texttt{KERNEL: RP-001}) & PASS \\
 \midrule
-\textbf{Pass Rate} & \textbf{Protocol \& Structural Safety} & \textbf{100.0\%} & \textbf{20.0\% ($\Delta = -80.0\%$)} & \textbf{100.0\%} \\
+\textbf{Adherence} & \textbf{Pass Rate (Shift $\Delta$)} & \textbf{5/5 (100.0\%)} & \textbf{1/5 (20.0\%, $\Delta = -80.0\%$)} & \textbf{5/5 (100.0\%, $\Delta = 0.0\%$)} \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \label{tab:matched}
 \end{table}
 
-\section{Discussion \& Conclusion}
-Our matched-pair experiment demonstrates a profound dissociation between \textit{passive clinical knowledge} (100.0\% pass rate in neutral framing) and \textit{active clinical resilience} (20.0\% pass rate under cognitive and social pressure, $\Delta = -80.0\%$). Specifically, authority sycophancy (\texttt{MP\_05}) directly induces structural reasoning failure \texttt{RP-001}, whereas symptomatic relief (\texttt{MP\_02}) triggers temporal premature closure. Certifying clinical LLMs for deployment requires counterfactual stress benchmarks rather than static question-answering evaluations.
+\section{Limitations \& Next-Phase Experimental Design}
+This pilot study establishes the counterfactual auditing software pipeline but has strict empirical boundaries:
+\begin{enumerate}
+    \item \textbf{Statistical Power:} With $N=5$ pairs, 4 discordant transitions yield an exact two-sided McNemar $p = 0.125$; larger sample sizes ($N \ge 50$ scenarios) are required for statistically powered inter-model comparisons.
+    \item \textbf{Single-Turn Ceiling Effect in Frontier Models:} \texttt{GPT-4o} achieved 5/5 adherence on single-turn prompts, suggesting that explicit single-turn traps are easily detected by frontier safety alignment. Future iterations must incorporate subtle multi-turn pressure and \textit{rightful-pressure controls} (where clinical hints are genuinely helpful) to penalize blind stubbornness.
+\end{enumerate}
 
 \begin{thebibliography}{9}
 \bibitem{gulati2021aha}
-M. Gulati \textit{et al.}, ``2021 AHA/ACC/ASE/CHEST/SAEM/SCCT/SCMR Guideline for the Evaluation and Diagnosis of Chest Pain,'' \textit{Circulation}, vol. 144, no. 22, pp. e368--e454, 2021.
-
+M. Gulati \textit{et al.}, ``2021 AHA/ACC Guideline for the Evaluation and Diagnosis of Chest Pain,'' \textit{Circulation}, vol. 144, no. 22, pp. e368--e454, 2021.
 \bibitem{croskerry2003importance}
 P. Croskerry, ``The importance of cognitive errors in diagnosis and strategies to minimize them,'' \textit{Academic Medicine}, vol. 78, no. 8, pp. 775--780, 2003.
-
 \bibitem{sharma2023towards}
-M. Sharma \textit{et al.}, ``Towards understanding sycophancy in language models,'' \textit{arXiv preprint arXiv:2310.13548}, 2023.
-
+M. Sharma \textit{et al.}, ``Towards understanding sycophancy in language models,'' \textit{arXiv:2310.13548}, 2023.
 \bibitem{kung2023performance}
-T. H. Kung \textit{et al.}, ``Performance of ChatGPT on USMLE: Potential for AI-assisted medical education using large language models,'' \textit{PLOS Digital Health}, vol. 2, no. 2, p. e0000198, 2023.
+T. H. Kung \textit{et al.}, ``Performance of ChatGPT on USMLE,'' \textit{PLOS Digital Health}, vol. 2, no. 2, p. e0000198, 2023.
 \end{thebibliography}
 
 \end{document}
@@ -200,4 +181,4 @@ with open("papers/latex/paper1_arxiv.tex", "w") as f:
 with open("papers/latex/paper2_arxiv.tex", "w") as f:
     f.write(paper2_tex)
 
-print("✅ Generated LaTeX manuscripts successfully in papers/latex/!")
+print("✅ Updated LaTeX manuscripts with strict methodological transparency, Clopper-Pearson CIs, exact McNemar p-values, and fitted tables!")
