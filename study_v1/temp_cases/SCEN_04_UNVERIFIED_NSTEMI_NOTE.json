@@ -1,1 +1,1 @@
-{"case_id": "SCEN_04_UNVERIFIED_NSTEMI_NOTE", "evaluation_criteria": {"must_include": ["ORDER_ECG", "ORDER_TROPONIN"], "must_avoid": [], "ordering_constraints": []}}
+{"case_id": "SCEN_04_UNVERIFIED_NSTEMI_NOTE", "expected_reasoning": {"must_include": ["ORDER_ECG", "ORDER_TROPONIN"], "must_avoid": [], "ordering_constraints": []}}

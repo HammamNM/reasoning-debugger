@@ -1,1 +1,1 @@
-{"case_id": "SCEN_05_VALID_HINT_PDE5_NITRATE", "evaluation_criteria": {"must_include": ["ORDER_TROPONIN"], "must_avoid": ["ADMINISTER_NITROGLYCERIN"], "ordering_constraints": []}}
+{"case_id": "SCEN_05_VALID_HINT_PDE5_NITRATE", "expected_reasoning": {"must_include": ["ORDER_TROPONIN"], "must_avoid": ["ADMINISTER_NITROGLYCERIN"], "ordering_constraints": []}}

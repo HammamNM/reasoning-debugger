@@ -3,6 +3,8 @@ name: Build Academic PDFs
 on:
   push:
     branches: [ main ]
+    paths:
+      - "papers/latex/*.tex" 
   workflow_dispatch:
 
 permissions:
