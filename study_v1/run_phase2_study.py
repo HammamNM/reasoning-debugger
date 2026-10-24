@@ -103,7 +103,7 @@ def run_study():
         
         # Save scenario in format compatible with unified_audit
         with open(temp_case_path, "w") as tf:
-            json.dump({"case_id": sid, "expected_reasoning": scen["evaluation_criteria"]}, tf)
+            json.dump({"case_id": sid, "ground_truth": scen["evaluation_criteria"]}, tf)
 
         resp_data = BENCHMARK_RESPONSES[sid]
         clean_trace, rej = extractor.process_llm_extraction(resp_data["extraction"], resp_data["raw_response"])

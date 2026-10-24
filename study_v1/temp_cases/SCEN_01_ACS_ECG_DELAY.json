@@ -1,1 +1,1 @@
-{"case_id": "SCEN_01_ACS_ECG_DELAY", "expected_reasoning": {"must_include": ["ORDER_ECG", "ORDER_TROPONIN"], "must_avoid": ["DISCHARGE"], "ordering_constraints": []}}
+{"case_id": "SCEN_01_ACS_ECG_DELAY", "ground_truth": {"must_include": ["ORDER_ECG", "ORDER_TROPONIN"], "must_avoid": ["DISCHARGE"], "ordering_constraints": []}}
