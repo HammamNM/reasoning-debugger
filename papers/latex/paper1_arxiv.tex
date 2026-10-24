@@ -8,7 +8,7 @@
 \usepackage{geometry}
 \geometry{margin=1in}
 
-\title{\textbf{Traceable Hybrid Auditing of Clinical LLM Outputs: A Proof-of-Concept Combining Span Verification, Protocol Rules, and Graph Reasoning Kernels}}
+\title{\textbf{Traceable Hybrid Auditing of Clinical LLM Outputs: Architecture and Pilot Calibration Combining Span Verification, Protocol Rules, and Graph Kernels}}
 
 \author{
   \textbf{Hammam Omer} \\
@@ -23,19 +23,19 @@
 \maketitle
 
 \begin{abstract}
-\noindent \textbf{Background:} Evaluating Large Language Models (LLMs) in open-ended clinical workflows such as acute chest pain triage requires auditing procedural adherence (omissions, temporal ordering, and contraindications) rather than static multiple-choice accuracy. Unconstrained \textit{LLM-as-a-Judge} paradigms risk fabricated event extraction and often penalize appropriate diagnostic uncertainty. \\
-\textbf{Objective:} We present a proof-of-concept \textbf{Traceable Neuro-Symbolic Auditing Framework} and evaluate its mechanism calibration on a pilot benchmark ($N=10$ traces, plus $N=5$ linguistic edge cases). \\
-\textbf{Methods:} The architecture decouples auditing into three layers: (1) a \texttt{TraceExtractor} enforcing deterministic verbatim span verification and epistemic assertion calibration (\texttt{PROPOSED}, \texttt{REPORTED\_PERFORMED}, \texttt{NEGATED}, \texttt{SUSPECTED}, \texttt{DEFINITIVE}), (2) a \texttt{ClinicalRuleEvaluator} checking temporal ordering and contraindications, and (3) a graph-based \texttt{Reasoning Kernel} detecting unsupported definitive claims (\texttt{Pattern RP-001}). \\
-\textbf{Pilot Results:} Across our 10-case pilot calibration suite (5 synthetic failure/control traces and 5 real \texttt{GPT-4o} responses), introducing assertion-status calibration eliminated 3 false-positive flags on negated actions and suspected differentials, shifting pilot specificity from 4/7 (57.1\%, 95\% CI: 18.4\%--90.1\%) to 7/7 (100.0\%, 95\% CI: 59.0\%--100.0\%) while preserving 3/3 sensitivity on synthetic protocol violations.
+\noindent \textbf{Background:} Evaluating Large Language Models (LLMs) in open-ended clinical workflows such as acute chest pain triage requires auditing procedural adherence (omissions, temporal ordering, and contraindications) rather than static multiple-choice accuracy. Unconstrained \textit{LLM-as-a-Judge} paradigms risk unverified event extraction and often penalize appropriate diagnostic uncertainty. \\
+\textbf{Objective:} We present the software architecture of a \textbf{Traceable Neuro-Symbolic Auditing Framework} and demonstrate its mechanism calibration on a pilot development set ($N=10$ traces, plus 5 targeted linguistic unit tests). \\
+\textbf{Methods:} The pipeline decouples auditing into three layers: (1) a \texttt{TraceExtractor} enforcing deterministic verbatim span verification and epistemic assertion calibration (\texttt{PROPOSED}, \texttt{REPORTED\_PERFORMED}, \texttt{NEGATED}, \texttt{SUSPECTED}, \texttt{DEFINITIVE}), (2) a \texttt{ClinicalRuleEvaluator} checking guideline-derived temporal ordering and contraindications, and (3) a graph-based \texttt{Reasoning Kernel} detecting unsupported definitive claims (\texttt{Pattern RP-001}). \\
+\textbf{Pilot Calibration Results:} On our 10-case development suite (5 synthetic protocol-violation/control traces and 5 real frontier LLM responses), introducing assertion-status calibration eliminated 3 false-positive flags on negated actions and suspected differentials (shifting development specificity from 4/7 to 7/7 while preserving 3/3 violation detection). All 5 targeted linguistic stress unit tests passed as designed.
 \end{abstract}
 
 \section{Introduction}
-While Large Language Models (LLMs) perform strongly on static medical licensing examinations \cite{kung2023performance}, open-ended emergency triage of \textbf{Acute Chest Pain} \cite{gulati2021aha} requires strict procedural adherence. An LLM may list a correct differential diagnosis while proposing lethal management steps, such as discharging a patient after symptomatic relief from a gastrointestinal cocktail prior to reviewing serial troponins (premature closure), or administering empiric heparin in suspected aortic dissection.
+While Large Language Models (LLMs) perform strongly on static medical licensing examinations \cite{kung2023performance}, open-ended emergency triage of \textbf{Acute Chest Pain} \cite{gulati2021aha} requires strict procedural adherence. An LLM may list a correct differential diagnosis while proposing unsafe management steps, such as discharging a patient after symptomatic relief from a gastrointestinal cocktail prior to reviewing serial troponins (premature closure), or administering empiric heparin in suspected aortic dissection.
 
 Current \textit{LLM-as-a-Judge} evaluation methods \cite{zheng2023judging} face two structural limitations in procedural clinical auditing:
 \begin{enumerate}
-    \item \textbf{Unverified Event Extraction:} A neural judge may hallucinate that a candidate response ordered an investigation when no such statement exists in the text.
-    \item \textbf{Epistemic Conflation:} Inspired by classical clinical negation and context detection algorithms such as \texttt{NegEx} \cite{chapman2001simple} and \texttt{ConText} \cite{harkema2009context}, an effective auditor must distinguish negated warnings (\textit{``Do not give heparin''}) and suspected differentials from definitive clinical commitments.
+    \item \textbf{Unverified Event Extraction:} A neural judge may infer or hallucinate that a candidate response ordered an investigation when no such statement exists in the text.
+    \item \textbf{Epistemic Conflation:} Building upon classical clinical negation and context detection principles established in \texttt{NegEx} \cite{chapman2001simple} and \texttt{ConText} \cite{harkema2009context}, an effective auditor must distinguish negated warnings (\textit{``Do not give heparin''}) and suspected differentials from definitive clinical commitments.
 \end{enumerate}
 
 \section{System Architecture}
@@ -45,30 +45,30 @@ Our framework separates linguistic extraction from deterministic symbolic verifi
 Given raw text $T$, candidate events $E = \{e_1, \dots, e_n\}$ must satisfy verbatim substring verification under whitespace/case normalization $\mathcal{N}(s_i) \subseteq \mathcal{N}(T)$, rejecting ungrounded extractions (\texttt{SPAN\_NOT\_IN\_SOURCE}). Lexical synonyms are mapped to canonical protocol codes, and events are filtered by assertion status $\alpha(e_i)$ so that \texttt{NEGATED} warnings are never penalized as proposed actions, and only \texttt{DEFINITIVE} inferences require structural evidentiary proof.
 
 \subsection{Tier 2 \& Tier 3: \texttt{ClinicalRuleEvaluator} \& \texttt{Reasoning Kernel}}
-The rule engine evaluates mandatory omissions (\texttt{CRITICAL\_OMISSION}), prerequisite temporal ordering $(a_{\text{pre}} \prec a_{\text{target}})$ for premature closure, and contraindications (\texttt{must\_avoid}). Concurrently, the \texttt{Reasoning Kernel} constructs a Directed Acyclic Graph $G = (V, E_{\text{graph}})$ and triggers \texttt{RP-001} whenever a \texttt{DEFINITIVE} inference node has support in-degree $\deg^{-}_{\text{SUPPORTS}}(v) = 0$.
+The rule engine evaluates mandatory omissions (\texttt{CRITICAL\_OMISSION}), prerequisite temporal ordering $(a_{\text{pre}} \prec a_{\text{target}})$ for premature closure, and contraindications (\texttt{must\_avoid}) mapped to 2021 AHA/ACC chest pain guidelines \cite{gulati2021aha}. Concurrently, the \texttt{Reasoning Kernel} constructs a Directed Acyclic Graph $G = (V, E_{\text{graph}})$ and triggers \texttt{RP-001} whenever a \texttt{DEFINITIVE} inference node has support in-degree $\deg^{-}_{\text{SUPPORTS}}(v) = 0$.
 
-\section{Pilot Calibration \& Mechanism Verification}
-Table \ref{tab:ablation} reports the pilot mechanism ablation across $N=10$ calibration traces (3 synthetic protocol violations, 2 synthetic safe traces, and 5 real \texttt{GPT-4o} responses) alongside an unseen 5-case linguistic stress suite (\texttt{run\_edge\_cases.py}).
+\section{Development Calibration \& Unit Verification}
+Table \ref{tab:ablation} reports the development mechanism calibration across $N=10$ traces alongside 5 targeted linguistic unit tests (\texttt{run\_edge\_cases.py}) testing quoted errors, conditional discharge, fabricated spans, lexical synonyms, and supported inferences.
 
 \begin{table}[h!]
 \centering
-\caption{Pilot Mechanism Ablation: Assertion Calibration on $N=10$ Traces}
+\caption{Development Mechanism Calibration on $N=10$ Traces (3 Synthetic Positives, 7 Negatives)}
 \vspace{0.2cm}
 \resizebox{\textwidth}{!}{%
 \begin{tabular}{lccccccc}
 \toprule
-\textbf{Auditor Configuration} & \textbf{TP} & \textbf{FP} & \textbf{TN} & \textbf{FN} & \textbf{Recall (3/3)} & \textbf{Specificity (TN/7)} & \textbf{Pilot $F_1$} \\
+\textbf{Auditor Configuration} & \textbf{TP} & \textbf{FP} & \textbf{TN} & \textbf{FN} & \textbf{Dev Recall (3/3)} & \textbf{Dev Specificity (TN/7)} & \textbf{Dev $F_1$} \\
 \midrule
-1. Uncalibrated Baseline & 3 & 3 & 4 & 0 & 100.0\% (29.2--100\%) & 57.1\% (18.4--90.1\%) & 0.667 \\
-\textbf{2. Calibrated Hybrid Pipeline} & \textbf{3} & \textbf{0} & \textbf{7} & \textbf{0} & \textbf{100.0\% (29.2--100\%)} & \textbf{100.0\% (59.0--100\%)} & \textbf{1.000} \\
+1. Uncalibrated Baseline & 3 & 3 & 4 & 0 & 100.0\% (95\% CI: 29.2--100\%) & 57.1\% (95\% CI: 18.4--90.1\%) & 0.667 \\
+\textbf{2. Calibrated Hybrid Pipeline} & \textbf{3} & \textbf{0} & \textbf{7} & \textbf{0} & \textbf{100.0\% (95\% CI: 29.2--100\%)} & \textbf{100.0\% (95\% CI: 59.0--100\%)} & \textbf{1.000} \\
 \bottomrule
 \end{tabular}%
 }
 \label{tab:ablation}
 \end{table}
 
-\section{Methodological Limitations \& Future Scaling}
-This work represents a software architecture and pilot calibration study rather than a large-scale empirical validation. Specifically: (1) the sample size ($N=10$ calibration traces, $N=5$ edge cases) yields wide Clopper-Pearson 95\% confidence intervals; (2) rules and synthetic test cases were authored by a single investigator without independent multi-clinician inter-annotator agreement ($\kappa$); and (3) while substring verification confirms quote existence, upstream assertion classification remains dependent on parser accuracy. Future work will expand evaluation to $>50$ multi-disease scenarios with blinded dual-clinician annotation and direct comparison against standalone LLM judges.
+\section{Methodological Limitations}
+This document describes our v0.1 software architecture and development calibration. Because the rules and test cases were co-developed on a small sample ($N=10$, with 3 synthetic positive violations), these figures represent functional verification (unit testing) rather than generalizable empirical performance. Furthermore, while substring verification confirms verbatim quote existence, assertion status assignment remains dependent on upstream parser classification accuracy. A formal comparative evaluation against standalone \textit{LLM-as-a-Judge} baselines on held-out multi-model responses is conducted in our expanded study.
 
 \begin{thebibliography}{9}
 \bibitem{gulati2021aha}
