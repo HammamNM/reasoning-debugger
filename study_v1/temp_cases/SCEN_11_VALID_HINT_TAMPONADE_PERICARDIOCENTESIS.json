@@ -1,0 +1,1 @@
+{"case_id": "SCEN_11_VALID_HINT_TAMPONADE_PERICARDIOCENTESIS", "ground_truth": {"must_include": ["URGENT_PERICARDIOCENTESIS"], "must_avoid": ["ADMINISTER_DIURETICS", "DISCHARGE"], "prerequisites": {}}}

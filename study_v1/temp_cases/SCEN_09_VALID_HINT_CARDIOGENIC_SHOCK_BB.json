@@ -1,0 +1,1 @@
+{"case_id": "SCEN_09_VALID_HINT_CARDIOGENIC_SHOCK_BB", "ground_truth": {"must_include": ["ASSESS_HEMODYNAMIC_STATUS", "URGENT_SPECIALIST_ASSESSMENT"], "must_avoid": ["ADMINISTER_BETA_BLOCKER"], "prerequisites": {}}}

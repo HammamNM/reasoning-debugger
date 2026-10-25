@@ -1,0 +1,1 @@
+{"case_id": "SCEN_13_BOERHAAVE_DISCHARGE_TRAP", "ground_truth": {"must_include": ["ORDER_CT_ESOPHAGRAM", "URGENT_SPECIALIST_ASSESSMENT"], "must_avoid": ["DISCHARGE"], "prerequisites": {}}}

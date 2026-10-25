@@ -1,95 +1,132 @@
-import json
-import uuid
+import re
 
 class TraceExtractor:
+    """
+    Tier 1: Deterministic Span Verification Firewall & Epistemic Assertion Calibrator.
+    """
     def __init__(self):
-        self.allowed_event_types = {"ACTION", "INFERENCE", "OBSERVATION", "EVIDENCE"}
-        
         self.canonical_actions = {
+            # ECG Synonyms
             "PERFORM_ECG": "ORDER_ECG",
             "OBTAIN_ECG": "ORDER_ECG",
             "12_LEAD_ECG": "ORDER_ECG",
-            "GIVE_HEPARIN": "ADMINISTER_HEPARIN",
-            "START_HEPARIN": "ADMINISTER_HEPARIN",
+            "STAT_ECG": "ORDER_ECG",
+            # Troponin Synonyms
+            "CHECK_TROPONIN": "ORDER_TROPONIN",
+            "SERIAL_TROPONIN": "ORDER_TROPONIN",
+            "HIGH_SENSITIVITY_TROPONIN": "ORDER_TROPONIN",
+            # Discharge Synonyms
             "SEND_HOME": "DISCHARGE",
             "DISCHARGE_PATIENT": "DISCHARGE",
-            "CHECK_TROPONIN": "ORDER_TROPONIN",
+            # Anticoagulation / Thrombolysis Synonyms
+            "START_HEPARIN": "ADMINISTER_HEPARIN",
+            "IV_HEPARIN": "ADMINISTER_HEPARIN",
+            "HEPARIN_BOLUS": "ADMINISTER_HEPARIN",
+            "GIVE_THROMBOLYTICS": "ADMINISTER_THROMBOLYTICS",
+            "FIBRINOLYTIC_THERAPY": "ADMINISTER_THROMBOLYTICS",
+            "SYSTEMIC_THROMBOLYSIS": "ADMINISTER_THROMBOLYTICS",
+            # Nitrates & Vasodilators
             "GIVE_NITROGLYCERIN": "ADMINISTER_NITROGLYCERIN",
             "SUBLINGUAL_NITROGLYCERIN": "ADMINISTER_NITROGLYCERIN",
+            "GIVE_NITROPRUSSIDE": "ADMINISTER_VASODILATOR",
+            "IV_NITROPRUSSIDE": "ADMINISTER_VASODILATOR",
+            # Beta-Blockers & Benzodiazepines & Diuretics
+            "GIVE_BETA_BLOCKER": "ADMINISTER_BETA_BLOCKER",
+            "IV_METOPROLOL": "ADMINISTER_BETA_BLOCKER",
+            "ORAL_METOPROLOL": "ADMINISTER_BETA_BLOCKER",
+            "IV_LORAZEPAM": "ADMINISTER_BENZODIAZEPINES",
+            "IV_DIAZEPAM": "ADMINISTER_BENZODIAZEPINES",
+            "GIVE_BENZODIAZEPINES": "ADMINISTER_BENZODIAZEPINES",
+            "GIVE_FUROSEMIDE": "ADMINISTER_DIURETICS",
+            # Procedures & Advanced Imaging
             "NEEDLE_DECOMPRESSION": "IMMEDIATE_PLEURAL_DECOMPRESSION",
             "FINGER_THORACOSTOMY": "IMMEDIATE_PLEURAL_DECOMPRESSION",
-            "CHEST_TUBE_DECOMPRESSION": "IMMEDIATE_PLEURAL_DECOMPRESSION"
+            "CHEST_TUBE_DECOMPRESSION": "IMMEDIATE_PLEURAL_DECOMPRESSION",
+            "EMERGENCY_PERICARDIOCENTESIS": "URGENT_PERICARDIOCENTESIS",
+            "PERFORM_PERICARDIOCENTESIS": "URGENT_PERICARDIOCENTESIS",
+            "CT_ESOPHAGRAM": "ORDER_CT_ESOPHAGRAM",
+            "CT_CHEST_CONTRAST": "ORDER_CT_ESOPHAGRAM"
         }
 
-    def verify_span(self, span_text, original_text):
-        if not original_text:
+    def normalize_text(self, text: str) -> str:
+        if not text:
+            return ""
+        return re.sub(r"\s+", " ", text.strip().lower())
+
+    def verify_span(self, span: str, raw_text: str) -> bool:
+        if raw_text is None:
             return True
-        clean_span = " ".join(span_text.lower().split())
-        clean_orig = " ".join(original_text.lower().split())
-        return clean_span in clean_orig
+        if not span or not span.strip():
+            return False
+        return self.normalize_text(span) in self.normalize_text(raw_text)
 
-    def process_llm_extraction(self, parsed_json, original_text=None):
-        trace_events = []
-        event_map = {}
+    def normalize_action(self, code: str) -> str:
+        if not code:
+            return code
+        code_upper = code.strip().upper()
+        return self.canonical_actions.get(code_upper, code_upper)
+
+    def process_llm_extraction(self, extraction_json: dict, raw_text: str = None):
+        clean_trace = []
         rejected_events = []
-        
-        for item in parsed_json.get("events", []):
-            event_id = item.get("event_id", str(uuid.uuid4()))
-            e_type = item.get("event_type", "UNKNOWN")
-            span = item.get("source_span", "")
-            status = item.get("assertion_status", "")
-            
-            if e_type not in self.allowed_event_types:
-                continue
-                
-            if original_text and not self.verify_span(span, original_text):
-                rejected_events.append({"id": event_id, "reason": "SPAN_NOT_IN_SOURCE", "span": span})
-                continue
-            
-            # تجاهل الأحداث المنفية (NEGATED) لأن النموذج يرفض فعلها
-            if status == "NEGATED":
-                continue
 
-            # حماية التشخيص التفريقي: النواة تحاسب فقط على الاستنتاجات الجازمة (DEFINITIVE)
-            if e_type == "INFERENCE" and status != "DEFINITIVE":
-                continue
-                
-            event = {
-                "id": event_id,
-                "event_type": e_type,
-                "content": span,
-                "metadata": {}
-            }
-            
-            if e_type in ["ACTION", "OBSERVATION"]:
-                raw_code = item.get("action_code") or item.get("observation_code")
-                if raw_code:
-                    normalized_code = self.canonical_actions.get(raw_code, raw_code)
-                    if e_type == "ACTION" and status in ["PROPOSED", "REPORTED_PERFORMED"]:
-                        event["metadata"]["action_code"] = normalized_code
-                    elif e_type == "OBSERVATION" and status == "OBSERVED_RESULT":
-                        event["metadata"]["action_code"] = normalized_code
-                
-            if e_type == "INFERENCE" and status == "DEFINITIVE":
-                if "inference_code" in item:
-                    event["metadata"]["inference_code"] = item["inference_code"]
-                event["metadata"]["support_required"] = True
-            
-            trace_events.append(event)
-            event_map[event_id] = event
+        events = extraction_json.get("events", [])
+        relations = extraction_json.get("relations", [])
 
-        for rel in parsed_json.get("relations", []):
+        # Map support relations targeting inference events
+        supported_targets = {}
+        for rel in relations:
             if rel.get("relation_type") == "CLAIMS_SUPPORT":
-                src_id = rel.get("source_event_id")
-                tgt_id = rel.get("target_event_id")
-                ev_span = rel.get("evidence_span", "")
-                
-                if original_text and ev_span and not self.verify_span(ev_span, original_text):
-                    continue
-                    
-                if tgt_id in event_map and src_id in event_map:
-                    if "supported_by" not in event_map[tgt_id]["metadata"]:
-                        event_map[tgt_id]["metadata"]["supported_by"] = []
-                    event_map[tgt_id]["metadata"]["supported_by"].append(src_id)
+                tgt = rel.get("target_event_id")
+                src = rel.get("source_event_id")
+                if tgt and src:
+                    supported_targets.setdefault(tgt, []).append(src)
 
-        return trace_events, rejected_events
+        for idx, ev in enumerate(events):
+            span = ev.get("source_span", "")
+            if not self.verify_span(span, raw_text):
+                rejected_events.append({
+                    "event_id": ev.get("event_id", f"E_{idx}"),
+                    "reason": "SPAN_NOT_IN_SOURCE",
+                    "attempted_span": span
+                })
+                continue
+
+            assertion = ev.get("assertion_status", "PROPOSED").upper()
+            # Filter out negated statements so warnings are not penalized as executed actions
+            if assertion == "NEGATED":
+                continue
+
+            ev_type = ev.get("event_type", "ACTION").upper()
+            ev_id = ev.get("event_id", f"e_{idx+1}")
+            metadata = {"assertion_status": assertion, "source_span": span}
+
+            if ev_type == "ACTION":
+                raw_code = ev.get("action_code", "")
+                norm_code = self.normalize_action(raw_code)
+                metadata["action_code"] = norm_code
+                content = f"Action: {norm_code}"
+            elif ev_type == "OBSERVATION":
+                obs_code = ev.get("observation_code") or ev.get("action_code", "")
+                metadata["action_code"] = obs_code
+                content = f"Observation: {obs_code}"
+                ev_type = "ACTION"  # Compatible with temporal ordering checks
+            elif ev_type == "INFERENCE":
+                inf_code = ev.get("inference_code", "UNKNOWN_INFERENCE")
+                metadata["inference_code"] = inf_code
+                # Only DEFINITIVE diagnostic claims require strict graph proof
+                metadata["support_required"] = (assertion == "DEFINITIVE")
+                if ev_id in supported_targets:
+                    metadata["supports"] = supported_targets[ev_id]
+                content = f"Inference: {inf_code} ({assertion})"
+            else:
+                content = span
+
+            clean_trace.append({
+                "id": ev_id,
+                "event_type": ev_type,
+                "content": content,
+                "metadata": metadata
+            })
+
+        return clean_trace, rejected_events

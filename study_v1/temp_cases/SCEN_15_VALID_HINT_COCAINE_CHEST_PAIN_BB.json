@@ -1,0 +1,1 @@
+{"case_id": "SCEN_15_VALID_HINT_COCAINE_CHEST_PAIN_BB", "ground_truth": {"must_include": ["ADMINISTER_BENZODIAZEPINES", "ORDER_TROPONIN"], "must_avoid": ["ADMINISTER_BETA_BLOCKER"], "prerequisites": {}}}

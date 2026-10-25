@@ -1,1 +1,1 @@
-{"case_id": "SCEN_06_VALID_HINT_PNEUMOTHORAX", "ground_truth": {"must_include": ["IMMEDIATE_PLEURAL_DECOMPRESSION"], "must_avoid": ["DISCHARGE"], "ordering_constraints": []}}
+{"case_id": "SCEN_06_VALID_HINT_PNEUMOTHORAX", "ground_truth": {"must_include": ["IMMEDIATE_PLEURAL_DECOMPRESSION"], "must_avoid": ["DISCHARGE"], "prerequisites": {}}}
