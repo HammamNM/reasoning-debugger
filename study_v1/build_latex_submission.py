@@ -1,6 +1,5 @@
-import re
+import os, re, urllib.request, urllib.parse
 
-# 1. Append Mandatory medRxiv / Journal Declarations to Markdown if not already present
 md_path = "study_v1/PAPER_MANUSCRIPT_V1.md"
 with open(md_path, "r", encoding="utf-8") as f:
     md_text = f.read()
@@ -19,7 +18,6 @@ declarations_block = """
 """
 
 if "## 9. Declarations" not in md_text:
-    # Insert right before References
     if "## References" in md_text:
         md_text = md_text.replace("## References", declarations_block.strip() + "\n\n---\n\n## References")
     else:
@@ -28,35 +26,53 @@ if "## 9. Declarations" not in md_text:
         f.write(md_text)
     with open("PAPER_MANUSCRIPT_V1.md", "w", encoding="utf-8") as f:
         f.write(md_text)
-    print("✅ Added Section 9 (Mandatory medRxiv/Journal Declarations) to Markdown manuscript.")
+    print("✅ Added Section 9 (Mandatory medRxiv/Journal Declarations) to Markdown.")
 
-# 2. Convert full Markdown manuscript to clean, compilable arXiv/Overleaf LaTeX (.tex)
 def escape_tex(s):
-    s = s.replace("\\", "\\textbackslash{}")
-    for ch in ["&", "%", "$", "#", "_", "{", "}"]:
-        s = s.replace(ch, "\\" + ch)
+    # Clean ASCII transliteration first
+    repl = {"—": "--", "–": "-", "’": "'", "‘": "'", "“": "``", "”": "''", "→": "->", "↔": "<->", "≥": ">=", "≤": "<="}
+    for k, v in repl.items():
+        s = s.replace(k, v)
+    s = s.encode("ascii", "ignore").decode("ascii")
+    
+    # Extract inline code and bold/italic tokens before escaping special chars
+    tokens = {}
+    def save_tok(match, prefix, wrap_l, wrap_r):
+        key = f"ZZZ{prefix}{len(tokens)}ZZZ"
+        inner = match.group(1)
+        for ch in ["\\", "&", "%", "$", "#", "_", "{", "}"]:
+            inner = inner.replace(ch, "\\" + ch if ch != "\\" else "\\textbackslash{}")
+        tokens[key] = f"{wrap_l}{inner}{wrap_r}"
+        return key
+
+    s = re.sub(r"`([^`]+)`", lambda m: save_tok(m, "CODE", r"\texttt{", "}"), s)
+    s = re.sub(r"\*\*([^*]+)\*\*", lambda m: save_tok(m, "BOLD", r"\textbf{", "}"), s)
+    s = re.sub(r"\*([^*]+)\*", lambda m: save_tok(m, "ITAL", r"\textit{", "}"), s)
+
+    for ch in ["\\", "&", "%", "$", "#", "_", "{", "}"]:
+        s = s.replace(ch, "\\" + ch if ch != "\\" else "\\textbackslash{}")
     s = s.replace("~", "\\textasciitilde{}").replace("^", "\\textasciicircum{}")
-    s = s.replace("->", "$\\rightarrow$").replace("<->", "$\\leftrightarrow$")
+    s = s.replace("<->", "$\\leftrightarrow$").replace("->", "$\\rightarrow$")
     s = s.replace(">=", "$\\ge$").replace("<=", "$\\le$")
-    # Restore bold and code formatting
-    s = re.sub(r"\*\*(.+?)\*\*", r"\\textbf{\1}", s)
-    s = re.sub(r"\*(.+?)\*", r"\\textit{\1}", s)
-    s = re.sub(r"`(.+?)`", r"\\texttt{\1}", s)
+
+    for k, v in tokens.items():
+        s = s.replace(k, v)
     return s
 
 tex_lines = [
     r"\documentclass[10pt,a4paper]{article}",
     r"\usepackage[utf8]{inputenc}",
     r"\usepackage[T1]{fontenc}",
-    r"\usepackage[margin=0.85in]{geometry}",
+    r"\usepackage[margin=0.8in]{geometry}",
     r"\usepackage{booktabs,longtable,array}",
     r"\usepackage{amsmath,amssymb}",
     r"\usepackage{hyperref}",
-    r"\usepackage{fancyvrb}",
     r"\hypersetup{colorlinks=true,linkcolor=blue,urlcolor=blue,citecolor=blue}",
-    r"\title{\textbf{Beyond Surface Fluency: A Deterministic-First Hybrid Clinical Auditor Exposes LLM-as-a-Judge Blindness and Behavioral Shifts Under Emergency Clinical Pressure}}",
-    r"\author{\textbf{Hammam Omer}\thanks{Correspondence: Hammam Omer. Repository: \url{https://github.com/HammamNM/reasoning-debugger} (Tag: \texttt{v0.2-frozen-rules}).}\\Faculty of Medicine, Omdurman Islamic University, Omdurman, Sudan\\Independent Clinical AI Safety Researcher (NexoraMed)}",
-    r"\date{October 2026}",
+    r"\setlength{\parskip}{0.4em}",
+    r"\setlength{\parindent}{0pt}",
+    r"\title{\Large\textbf{Beyond Surface Fluency: A Deterministic-First Hybrid Clinical Auditor Exposes LLM-as-a-Judge Blindness and Behavioral Shifts Under Emergency Clinical Pressure}}",
+    r"\author{\textbf{Hammam Omer}\thanks{Correspondence: Hammam Omer. Official Benchmark Repository: \url{https://github.com/HammamNM/reasoning-debugger} (Frozen Tag: \texttt{v0.2-frozen-rules}).}\\ \small Faculty of Medicine, Omdurman Islamic University, Omdurman, Sudan\\ \small Independent Clinical AI Safety Researcher (NexoraMed)}",
+    r"\date{\small October 2026}",
     r"\begin{document}",
     r"\maketitle"
 ]
@@ -72,7 +88,6 @@ for raw_line in md_text.splitlines():
     if line.strip() == "---" or line.strip().startswith("===="):
         continue
 
-    # Handle code blocks (Figures, Algorithms, Case Study Boxes)
     if line.strip().startswith("```"):
         if in_list:
             tex_lines.append(r"\end{itemize}")
@@ -86,10 +101,10 @@ for raw_line in md_text.splitlines():
         continue
 
     if in_code:
-        tex_lines.append(line)
+        clean_code = line.encode("ascii", "ignore").decode("ascii")
+        tex_lines.append(clean_code[:102])
         continue
 
-    # Handle Markdown Tables
     if line.strip().startswith("|"):
         if in_list:
             tex_lines.append(r"\end{itemize}")
@@ -99,8 +114,18 @@ for raw_line in md_text.splitlines():
             tex_lines.append(r"\midrule")
             continue
         if not in_table:
-            col_spec = "l" + "c" * (len(cells) - 1)
-            tex_lines.append(r"\begin{center}\scriptsize\begin{longtable}{" + col_spec + r"}")
+            n_cols = len(cells)
+            if n_cols == 3:
+                col_spec = r"p{0.18\textwidth}p{0.34\textwidth}p{0.40\textwidth}"
+            elif n_cols == 5:
+                col_spec = r"p{0.34\textwidth}cccc"
+            elif n_cols == 6:
+                col_spec = r"p{0.30\textwidth}cp{0.20\textwidth}p{0.18\textwidth}cc"
+            elif n_cols == 8:
+                col_spec = r"p{0.18\textwidth}p{0.14\textwidth}cccccc"
+            else:
+                col_spec = "l" + "c" * (n_cols - 1)
+            tex_lines.append(r"{\scriptsize\setlength{\tabcolsep}{3.5pt}\begin{longtable}{" + col_spec + r"}")
             tex_lines.append(r"\toprule")
             in_table = True
         row_tex = " & ".join(escape_tex(c) for c in cells) + r" \\"
@@ -109,33 +134,28 @@ for raw_line in md_text.splitlines():
     else:
         if in_table:
             tex_lines.append(r"\bottomrule")
-            tex_lines.append(r"\end{longtable}\end{center}")
+            tex_lines.append(r"\end{longtable}}")
             in_table = False
 
-    # Handle Headings
     if line.startswith("## "):
         if in_list:
             tex_lines.append(r"\end{itemize}")
             in_list = False
-        h = escape_tex(line[3:].strip())
-        tex_lines.append(r"\section*{" + h + r"}")
+        tex_lines.append(r"\section*{" + escape_tex(line[3:].strip()) + r"}")
         continue
     if line.startswith("### "):
         if in_list:
             tex_lines.append(r"\end{itemize}")
             in_list = False
-        h = escape_tex(line[4:].strip())
-        tex_lines.append(r"\subsection*{" + h + r"}")
+        tex_lines.append(r"\subsection*{" + escape_tex(line[4:].strip()) + r"}")
         continue
     if line.startswith("#### "):
         if in_list:
             tex_lines.append(r"\end{itemize}")
             in_list = False
-        h = escape_tex(line[5:].strip())
-        tex_lines.append(r"\subsubsection*{" + h + r"}")
+        tex_lines.append(r"\subsubsection*{" + escape_tex(line[5:].strip()) + r"}")
         continue
 
-    # Handle Bullet / Numbered Lists
     if re.match(r"^(\*|-|\d+\.)\s+", line.strip()):
         if not in_list:
             tex_lines.append(r"\begin{itemize}")
@@ -156,12 +176,46 @@ for raw_line in md_text.splitlines():
 if in_list:
     tex_lines.append(r"\end{itemize}")
 if in_table:
-    tex_lines.append(r"\bottomrule\end{longtable}\end{center}")
+    tex_lines.append(r"\bottomrule\end{longtable}}")
 
 tex_lines.append(r"\end{document}")
+tex_content = "\n".join(tex_lines)
 
-tex_path = "study_v1/PAPER_MANUSCRIPT_V1.tex"
-with open(tex_path, "w", encoding="utf-8") as f:
-    f.write("\n".join(tex_lines))
+for path in ["study_v1/PAPER_MANUSCRIPT_V1.tex", "PAPER_MANUSCRIPT_V1.tex"]:
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(tex_content)
+print(f"✅ Saved standard LaTeX source to PAPER_MANUSCRIPT_V1.tex ({len(tex_lines)} lines)")
 
-print(f"✅ Generated official arXiv/Overleaf LaTeX source: {tex_path} ({len(tex_lines)} lines)")
+# Attempt cloud LaTeX compilation (TeXLive.net CGI) to produce genuine typeset PDF
+compiled_ok = False
+try:
+    print("⏳ Compiling genuine LaTeX PDF via TeXLive.net API...")
+    boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW"
+    body = []
+    for name, val in [("engine", "pdflatex"), ("return", "pdf")]:
+        body.append(f"--{boundary}\r\nContent-Disposition: form-data; name=\"{name}\"\r\n\r\n{val}\r\n")
+    body.append(f"--{boundary}\r\nContent-Disposition: form-data; name=\"filecontents[]\"; filename=\"document.tex\"\r\nContent-Type: text/plain\r\n\r\n{tex_content}\r\n")
+    body.append(f"--{boundary}\r\nContent-Disposition: form-data; name=\"filename[]\"\r\n\r\ndocument.tex\r\n")
+    body.append(f"--{boundary}--\r\n")
+    payload = "".join(body).encode("utf-8")
+    req = urllib.request.Request(
+        "[https://texlive.net/cgi-bin/latexcgi](https://texlive.net/cgi-bin/latexcgi)",
+        data=payload,
+        headers={"Content-Type": f"multipart/form-data; boundary={boundary}", "User-Agent": "Mozilla/5.0"}
+    )
+    with urllib.request.urlopen(req, timeout=45) as resp:
+        pdf_data = resp.read()
+        if pdf_data.startswith(b"%PDF"):
+            for p_out in ["study_v1/PAPER_MANUSCRIPT_V1.pdf", "PAPER_MANUSCRIPT_V1.pdf"]:
+                with open(p_out, "wb") as pf:
+                    pf.write(pdf_data)
+            print(f"✅ SUCCESS! Genuine Typeset LaTeX PDF compiled ({len(pdf_data)/1024:.1f} KB)!")
+            compiled_ok = True
+        else:
+            print("⚠️ Cloud returned log instead of PDF; using pure-Python PDF builder as fallback.")
+except Exception as e:
+    print(f"⚠️ Cloud TeXLive unreachable ({e}); using local pure-Python PDF builder.")
+
+if not compiled_ok:
+    os.system("python study_v1/build_academic_pdf.py")
+    os.system("cp study_v1/PAPER_MANUSCRIPT_V1.pdf ./PAPER_MANUSCRIPT_V1.pdf")
