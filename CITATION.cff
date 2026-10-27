@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use this software, benchmark, or manuscript, please cite it as below."
+authors:
+  - family-names: "Omer"
+    given-names: "Hammam"
+    affiliation: "Faculty of Medicine, Omdurman Islamic University; NexoraMed"
+title: "Beyond Surface Fluency: A Deterministic-First Hybrid Clinical Auditor Exposes LLM-as-a-Judge Blindness and Behavioral Shifts Under Emergency Clinical Pressure"
+version: "v1.0.0-manuscript"
+date-released: 2026-10-27
+url: "https://github.com/HammamNM/reasoning-debugger"
+repository-code: "https://github.com/HammamNM/reasoning-debugger"
+keywords:
+  - Clinical AI Safety
+  - Emergency Medicine
+  - LLM-as-a-Judge
+  - Neuro-Symbolic AI
+  - Sycophancy
+license: MIT
