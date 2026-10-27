@@ -582,6 +582,18 @@ All source code, frozen rule specifications, development and held-out test scena
 
 ---
 
+---
+
+## 9. Declarations (Mandatory Ethics, Data, and Competing Interests)
+
+* **Ethics Statement and Human Subjects Research:** This study exclusively evaluates artificial intelligence models using synthetic, expert-curated clinical emergency vignettes (`SCEN_01`--`SCEN_50`). No real patient data, electronic health records, protected health information (PHI), or human subjects were involved at any stage of this research. Institutional Review Board (IRB) approval and informed consent were therefore not required.
+* **Data and Code Availability:** All 50 clinical scenario specifications (15 development, 35 held-out test), the frozen Deterministic-First Hybrid Clinical Auditor codebase (`v0.2-frozen-rules`), all 420 raw model evaluation logs, and statistical reproduction scripts are publicly available without restriction at `https://github.com/HammamNM/reasoning-debugger`.
+* **Competing Interests:** The author declares no competing financial or non-financial interests.
+* **Funding Statement:** This research received no specific grant from any funding agency in the public, commercial, or not-for-profit sectors.
+* **Author Contributions:** H.O. conceived the study, designed the Deterministic-First Hybrid Clinical Auditor architecture, curated the clinical emergency benchmark, executed the multi-ecosystem evaluations and statistical analyses, and wrote the manuscript.
+
+---
+
 ## References
 
 1. Amsterdam EA, Wenger NK, Brindis RG, et al. 2014 AHA/ACC Guideline for the Management of Patients With Non-ST-Elevation Acute Coronary Syndromes. *Circulation*. 2014;130(25):e344-e426.
