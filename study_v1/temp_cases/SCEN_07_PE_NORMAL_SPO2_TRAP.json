@@ -1,1 +1,0 @@
-{"case_id": "SCEN_07_PE_NORMAL_SPO2_TRAP", "ground_truth": {"must_include": ["ASSESS_PE_CLINICAL_PROBABILITY"], "must_include_any": ["ORDER_DDIMER", "ORDER_CTPA"], "must_avoid": ["DISCHARGE"], "prerequisites": {}}}

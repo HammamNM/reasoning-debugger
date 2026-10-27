@@ -1,0 +1,242 @@
+{
+  "benchmark_version": "v0.2-frozen-rules",
+  "held_out_test_scenarios": 35,
+  "wrongful_traps": 24,
+  "rightful_hints": 11,
+  "models": {
+    "openai/gpt-oss-120b": {
+      "label": "OpenAI Open-Weight (120B Dense)",
+      "completed_scenarios": 35,
+      "wrongful_neutral": {
+        "pass": 22,
+        "total": 24,
+        "pct": 91.67,
+        "wilson_95_ci": [
+          74.2,
+          97.7
+        ]
+      },
+      "wrongful_pressured": {
+        "pass": 23,
+        "total": 24,
+        "pct": 95.83,
+        "wilson_95_ci": [
+          79.8,
+          99.3
+        ]
+      },
+      "wrongful_discordant": {
+        "sycophancy_collapse_b": 0,
+        "defensive_arousal_c": 1,
+        "mcnemar_p": 1.0
+      },
+      "rightful_neutral": {
+        "pass": 10,
+        "total": 11,
+        "pct": 90.91
+      },
+      "rightful_pressured": {
+        "pass": 11,
+        "total": 11,
+        "pct": 100.0
+      },
+      "auditor_detected_failures": 4,
+      "llm_judge_false_passes_on_failures": 4
+    },
+    "openai/gpt-oss-20b": {
+      "label": "OpenAI Open-Weight (20B Compact)",
+      "completed_scenarios": 35,
+      "wrongful_neutral": {
+        "pass": 17,
+        "total": 24,
+        "pct": 70.83,
+        "wilson_95_ci": [
+          50.8,
+          85.1
+        ]
+      },
+      "wrongful_pressured": {
+        "pass": 19,
+        "total": 24,
+        "pct": 79.17,
+        "wilson_95_ci": [
+          59.5,
+          90.8
+        ]
+      },
+      "wrongful_discordant": {
+        "sycophancy_collapse_b": 3,
+        "defensive_arousal_c": 5,
+        "mcnemar_p": 0.7266
+      },
+      "rightful_neutral": {
+        "pass": 4,
+        "total": 11,
+        "pct": 36.36
+      },
+      "rightful_pressured": {
+        "pass": 9,
+        "total": 11,
+        "pct": 81.82
+      },
+      "auditor_detected_failures": 21,
+      "llm_judge_false_passes_on_failures": 7
+    },
+    "qwen/qwen3.8-27b": {
+      "label": "Alibaba Qwen 3.8 (27B Dense)",
+      "completed_scenarios": 35,
+      "wrongful_neutral": {
+        "pass": 21,
+        "total": 24,
+        "pct": 87.5,
+        "wilson_95_ci": [
+          69.0,
+          95.7
+        ]
+      },
+      "wrongful_pressured": {
+        "pass": 18,
+        "total": 24,
+        "pct": 75.0,
+        "wilson_95_ci": [
+          55.1,
+          88.0
+        ]
+      },
+      "wrongful_discordant": {
+        "sycophancy_collapse_b": 4,
+        "defensive_arousal_c": 1,
+        "mcnemar_p": 0.375
+      },
+      "rightful_neutral": {
+        "pass": 9,
+        "total": 11,
+        "pct": 81.82
+      },
+      "rightful_pressured": {
+        "pass": 11,
+        "total": 11,
+        "pct": 100.0
+      },
+      "auditor_detected_failures": 11,
+      "llm_judge_false_passes_on_failures": 11
+    },
+    "gemma-4-26b-a4b-it": {
+      "label": "Google Gemma 4 (26B-A4B MoE)",
+      "completed_scenarios": 35,
+      "wrongful_neutral": {
+        "pass": 22,
+        "total": 24,
+        "pct": 91.67,
+        "wilson_95_ci": [
+          74.2,
+          97.7
+        ]
+      },
+      "wrongful_pressured": {
+        "pass": 20,
+        "total": 24,
+        "pct": 83.33,
+        "wilson_95_ci": [
+          64.1,
+          93.3
+        ]
+      },
+      "wrongful_discordant": {
+        "sycophancy_collapse_b": 2,
+        "defensive_arousal_c": 0,
+        "mcnemar_p": 0.5
+      },
+      "rightful_neutral": {
+        "pass": 11,
+        "total": 11,
+        "pct": 100.0
+      },
+      "rightful_pressured": {
+        "pass": 11,
+        "total": 11,
+        "pct": 100.0
+      },
+      "auditor_detected_failures": 6,
+      "llm_judge_false_passes_on_failures": 6
+    },
+    "gemini-3.5-flash-lite": {
+      "label": "Google Gemini 3.5 Flash-Lite",
+      "completed_scenarios": 35,
+      "wrongful_neutral": {
+        "pass": 21,
+        "total": 24,
+        "pct": 87.5,
+        "wilson_95_ci": [
+          69.0,
+          95.7
+        ]
+      },
+      "wrongful_pressured": {
+        "pass": 22,
+        "total": 24,
+        "pct": 91.67,
+        "wilson_95_ci": [
+          74.2,
+          97.7
+        ]
+      },
+      "wrongful_discordant": {
+        "sycophancy_collapse_b": 0,
+        "defensive_arousal_c": 1,
+        "mcnemar_p": 1.0
+      },
+      "rightful_neutral": {
+        "pass": 10,
+        "total": 11,
+        "pct": 90.91
+      },
+      "rightful_pressured": {
+        "pass": 11,
+        "total": 11,
+        "pct": 100.0
+      },
+      "auditor_detected_failures": 6,
+      "llm_judge_false_passes_on_failures": 6
+    },
+    "gemini-3.1-flash-lite": {
+      "label": "Google Gemini 3.1 Flash-Lite",
+      "completed_scenarios": 35,
+      "wrongful_neutral": {
+        "pass": 21,
+        "total": 24,
+        "pct": 87.5,
+        "wilson_95_ci": [
+          69.0,
+          95.7
+        ]
+      },
+      "wrongful_pressured": {
+        "pass": 23,
+        "total": 24,
+        "pct": 95.83,
+        "wilson_95_ci": [
+          79.8,
+          99.3
+        ]
+      },
+      "wrongful_discordant": {
+        "sycophancy_collapse_b": 0,
+        "defensive_arousal_c": 2,
+        "mcnemar_p": 0.5
+      },
+      "rightful_neutral": {
+        "pass": 10,
+        "total": 11,
+        "pct": 90.91
+      },
+      "rightful_pressured": {
+        "pass": 11,
+        "total": 11,
+        "pct": 100.0
+      },
+      "auditor_detected_failures": 5,
+      "llm_judge_false_passes_on_failures": 4
+    }
+  }
+}

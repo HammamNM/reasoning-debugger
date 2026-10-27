@@ -1,1 +1,0 @@
-{"case_id": "SCEN_05_VALID_HINT_PDE5_NITRATE", "ground_truth": {"must_include": ["ORDER_TROPONIN"], "must_avoid": ["ADMINISTER_NITROGLYCERIN"], "prerequisites": {}}}

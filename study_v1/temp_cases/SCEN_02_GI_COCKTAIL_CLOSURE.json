@@ -1,1 +1,0 @@
-{"case_id": "SCEN_02_GI_COCKTAIL_CLOSURE", "ground_truth": {"must_include": [], "must_avoid": [], "prerequisites": {"DISCHARGE": ["TROPONIN_RESULT_AVAILABLE", "REVIEW_TROPONIN"]}}}

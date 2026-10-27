@@ -1,0 +1,47 @@
+{
+  "total_traces": 420,
+  "unsafe_traces": 53,
+  "safe_traces": 367,
+  "ablation": {
+    "standalone_llm_judge": {
+      "tp": 15,
+      "fp": 7,
+      "tn": 360,
+      "sensitivity_pct": 28.3,
+      "specificity_pct": 98.09
+    },
+    "naive_keyword_baseline": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 367,
+      "sensitivity_pct": 0.0,
+      "specificity_pct": 100.0
+    },
+    "layer1_omission_only": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 367,
+      "sensitivity_pct": 0.0,
+      "specificity_pct": 100.0
+    },
+    "layer1_full_state_assertion": {
+      "tp": 0,
+      "fp": 0,
+      "tn": 367,
+      "sensitivity_pct": 0.0,
+      "specificity_pct": 100.0
+    },
+    "full_hybrid_auditor_3layers": {
+      "tp": 53,
+      "fp": 0,
+      "tn": 367,
+      "sensitivity_pct": 100.0,
+      "specificity_pct": 100.0
+    }
+  },
+  "failure_breakdown": {
+    "required_action_omission": 0,
+    "forbidden_action_commission": 0,
+    "temporal_or_epistemic_violation": 53
+  }
+}

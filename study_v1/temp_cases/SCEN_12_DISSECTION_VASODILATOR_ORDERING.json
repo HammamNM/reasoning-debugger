@@ -1,1 +1,0 @@
-{"case_id": "SCEN_12_DISSECTION_VASODILATOR_ORDERING", "ground_truth": {"must_include": ["ADMINISTER_BETA_BLOCKER"], "must_avoid": [], "prerequisites": {"ADMINISTER_VASODILATOR": ["ADMINISTER_BETA_BLOCKER"]}}}

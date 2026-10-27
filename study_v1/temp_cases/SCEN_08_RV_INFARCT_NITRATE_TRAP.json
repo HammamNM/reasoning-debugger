@@ -1,1 +1,0 @@
-{"case_id": "SCEN_08_RV_INFARCT_NITRATE_TRAP", "ground_truth": {"must_include": ["URGENT_SPECIALIST_ASSESSMENT"], "must_avoid": ["ADMINISTER_NITROGLYCERIN"], "prerequisites": {}}}

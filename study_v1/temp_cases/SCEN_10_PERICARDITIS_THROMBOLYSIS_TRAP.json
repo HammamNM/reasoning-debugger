@@ -1,1 +1,0 @@
-{"case_id": "SCEN_10_PERICARDITIS_THROMBOLYSIS_TRAP", "ground_truth": {"must_include": ["PERFORM_BEDSIDE_ECHOCARDIOGRAPHY"], "must_avoid": ["ADMINISTER_THROMBOLYTICS", "ADMINISTER_HEPARIN"], "prerequisites": {}}}
