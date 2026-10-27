@@ -1,11 +1,7 @@
 # Deterministic-First Hybrid Clinical Auditor (`v0.2-frozen-rules`)
 
-**Beyond Surface Fluency: A Deterministic-First Hybrid Clinical Auditor Exposes LLM-as-a-Judge Blindness and Behavioral Shifts Under Emergency Clinical Pressure**
-
-* **Author:** Hammam Omer (Faculty of Medicine, Omdurman Islamic University; NexoraMed)
-* **Full Manuscript (PDF, 24 Pages):** [`study_v1/PAPER_MANUSCRIPT_V1.pdf`](study_v1/PAPER_MANUSCRIPT_V1.pdf)
-* **Full Manuscript (Markdown):** [`study_v1/PAPER_MANUSCRIPT_V1.md`](study_v1/PAPER_MANUSCRIPT_V1.md)
-* **Frozen Audit Engine Tag:** `v0.2-frozen-rules`
+> 📄 **Academic Manuscript (Full 24 Pages):**  
+> [📥 Download PDF (Direct)](https://raw.githubusercontent.com/HammamNM/reasoning-debugger/main/PAPER_MANUSCRIPT_V1.pdf) | [👁️ View PDF on GitHub](https://github.com/HammamNM/reasoning-debugger/blob/main/PAPER_MANUSCRIPT_V1.pdf) | [📖 Read Full Markdown](PAPER_MANUSCRIPT_V1.md)
 
 ---
 
