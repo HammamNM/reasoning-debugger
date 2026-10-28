@@ -8,3 +8,8 @@ venv/
 archive_scripts/
 __pycache__/
 *.pyc
+__pycache__/
+*.py[cod]
+*.bak
+.venv/
+venv/
