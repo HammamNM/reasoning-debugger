@@ -1,7 +1,7 @@
 # Deterministic-First Hybrid Clinical Auditor (`v0.2-frozen-rules`)
 
 [![Preprint](https://img.shields.io/badge/Manuscript-PDF_Available-b31b1b.svg)](PAPER_MANUSCRIPT_V1.pdf)
-[![Benchmark](https://img.shields.io/badge/Benchmark-50_Emergency_Scenarios-blue.svg)](study_v1/scenarios/)
+[![Benchmark](https://img.shields.io/badge/Clinical_Specs-50_Emergency_Scenarios-blue.svg)](CLINICAL_SPECIFICATIONS.md)
 [![Evaluations](https://img.shields.io/badge/Live_Audit-420_Paired_Traces-success.svg)](study_v1/results/)
 [![Tag](https://img.shields.io/badge/Frozen_Release-v0.2--frozen--rules-orange.svg)](https://github.com/HammamNM/reasoning-debugger/releases/tag/v0.2-frozen-rules)
 
