@@ -1,6 +1,7 @@
 # Deterministic-First Hybrid Clinical Auditor (`v0.2-frozen-rules`)
 
 [![Live Demo](https://img.shields.io/badge/Interactive_Explorer-420_Live_Traces-00b4d8.svg)](https://hammamnm.github.io/reasoning-debugger/)
+[![Download CV](https://img.shields.io/badge/Curriculum_Vitae-PDF_Download-2563eb.svg)](CV_HAMMAM_OMER.pdf)
 [![Preprint](https://img.shields.io/badge/Manuscript-PDF_Available-b31b1b.svg)](PAPER_MANUSCRIPT_V1.pdf)
 [![Benchmark](https://img.shields.io/badge/Clinical_Specs-50_Emergency_Scenarios-blue.svg)](CLINICAL_SPECIFICATIONS.md)
 [![Evaluations](https://img.shields.io/badge/Live_Audit-420_Paired_Traces-success.svg)](study_v1/results/)
