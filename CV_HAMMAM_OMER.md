@@ -45,4 +45,4 @@ Faculty of Medicine, Omdurman Islamic University — Omdurman, Sudan (3rd Year)
 
 ## Publications & Preprints
 
-* **Omer, H.** (2026). *Beyond Surface Fluency: A Deterministic-First Hybrid Clinical Auditor Exposes LLM-as-a-Judge Blindness and Behavioral Shifts Under Emergency Clinical Pressure*. medRxiv preprint. Code & Live Audit Traces: `github.com/HammamNM/reasoning-debugger`.
+* **Omer, H.** (2026). *Beyond Surface Fluency: A Deterministic-First Hybrid Clinical Auditor Exposes LLM-as-a-Judge Blindness and Behavioral Shifts Under Emergency Clinical Pressure*. Zenodo Preprint (DOI: [10.5281/zenodo.23835945](https://doi.org/10.5281/zenodo.23835945)). Code & Live Audit Traces: `github.com/HammamNM/reasoning-debugger`.
