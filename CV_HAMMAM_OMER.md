@@ -19,8 +19,8 @@ Medical AI researcher and software builder specializing in **LLM Evaluation, Cli
 * **Zero-Hallucination Extraction:** Designed a deterministic *Verbatim Substring Verification Gate* enforcing exact character-level grounding (`norm(span) in norm(R)`), achieving **0 hallucinations across 1,767 extracted clinical event spans**.
 * **Clinical Guideline Grounding:** Formulated 50 end-to-end emergency medicine scenarios anchored directly to Class I recommendations from AHA/ACC, ESC, BTS, and EAST clinical guidelines.
 
-### 2. Reasoning Debugger & Execution Kernel
-*Lead Developer & System Architect* | [Architecture Spec](https://github.com/HammamNM/reasoning-debugger/blob/main/ARCHITECTURE.md)
+### 2. Clinical Reasoning Platform & Execution Kernel
+*Lead Developer & System Architect* | [Live Cloud Web App](https://hammam16.pythonanywhere.com/) | [Architecture Spec](https://github.com/HammamNM/reasoning-debugger/blob/main/ARCHITECTURE.md)
 * Developed an open-source, domain-independent runtime kernel for transforming unstructured chain-of-thought traces into structured directed acyclic reasoning graphs.
 * Implemented structural heuristic detectors for locating epistemic and cognitive bias patterns, including anchoring, unsupported inference, and premature diagnostic closure.
 * Enforced strict contract-driven architecture with isolated runtime boundaries and automated multi-phase contract test suites (`pytest`).
